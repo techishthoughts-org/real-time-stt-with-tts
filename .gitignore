@@ -1,0 +1,43 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Log files
+*.log
+app.log
+realtimesst.log
+
+# Configuration files (user-specific)
+.realtime_stt_config.json
+.realtime_stt_config.json.backup
+
+# Audio files (if any)
+*.wav
+*.mp3
+*.flac
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+
+# Prevent accumulation of temporary validation/test files
+*_temp_*.md
+*_test_*.py
+debug_*.py
+test_*.log

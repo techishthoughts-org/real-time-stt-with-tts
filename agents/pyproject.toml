@@ -1,0 +1,114 @@
+[project]
+name = "realtime-stt"
+version = "0.1.0"
+description = "Real-time Speech-to-Text with Hexagonal Architecture using RealtimeSTT, LangGraph, and Pydantic"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "RealtimeSTT Team", email = "contact@realtimestt.dev"},
+]
+license = {text = "MIT"}
+keywords = ["speech-to-text", "real-time", "whisper", "langraph", "pydantic", "hexagonal-architecture", "ai", "ml"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Framework :: FastAPI",
+]
+dependencies = [
+    "asyncio-mqtt>=0.16.2",
+    "fastapi>=0.115.13",
+    "httpx>=0.25.0",
+    "langchain-core>=0.3.66",
+    "langgraph>=0.4.8",
+    "loguru>=0.7.3",
+    "numpy>=1.24.0",
+    "ollama>=0.3.0",
+    "openai>=1.91.0",
+    "opentelemetry-api>=1.34.1",
+    "opentelemetry-instrumentation-fastapi>=0.55b1",
+    "opentelemetry-sdk>=1.34.1",
+    "pydantic>=2.11.7",
+    "pyaudio>=0.2.11",
+    "python-multipart>=0.0.6",
+    "sounddevice>=0.4.6",
+    "realtimestt>=0.3.104",
+    "rich>=14.0.0",
+    "sentence-transformers>=2.2.2",
+    "structlog>=25.4.0",
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "typer>=0.16.0",
+    "uvicorn>=0.34.3",
+    "aiohttp>=3.12.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/RealtimeSTT"
+Documentation = "https://github.com/yourusername/RealtimeSTT#readme"
+Repository = "https://github.com/yourusername/RealtimeSTT"
+Issues = "https://github.com/yourusername/RealtimeSTT/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/realtime_stt"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+
+[project.scripts]
+realtime-stt = "realtime_stt.cli:main"
+realtime-stt-server = "realtime_stt.main:main"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["realtime_stt"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--verbose --tb=short"
+asyncio_mode = "auto"
