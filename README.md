@@ -72,7 +72,7 @@
 
 1. **Clone and setup:**
 ```bash
-git clone <repository-url>
+git clone https://github.com/techishthoughts-org/real-time-stt-with-tts.git
 cd RealtimeSTT
 make install  # Installs all dependencies and builds CLI
 ```
