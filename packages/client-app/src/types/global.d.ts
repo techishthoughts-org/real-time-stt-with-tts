@@ -45,10 +45,10 @@ interface Window {
   };
 }
 
-declare var SpeechRecognition: {
+declare const SpeechRecognition: {
   new (): SpeechRecognition;
 };
 
-declare let webkitSpeechRecognition: {
+declare const webkitSpeechRecognition: {
   new (): SpeechRecognition;
 };

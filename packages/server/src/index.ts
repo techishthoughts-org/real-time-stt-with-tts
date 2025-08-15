@@ -10,6 +10,8 @@ import client from 'prom-client';
 import { cacheService } from './cache';
 import { EngineManager } from './engines';
 import { healthRoutes } from './routes/health';
+import { authRoutes } from './routes/auth';
+import cookie from '@fastify/cookie';
 import { WebRTCManager } from './webrtc';
 import { initializeWebSocket } from './websocket';
 
@@ -238,6 +240,7 @@ export async function buildApp() {
 
   // Health routes
   await healthRoutes(fastify);
+  await authRoutes(fastify);
 
   // Setup routes
   // Note: /health and /llm/health are already registered by healthRoutes

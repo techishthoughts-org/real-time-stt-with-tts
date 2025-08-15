@@ -1,0 +1,358 @@
+import { logger } from '@voice/observability';
+import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { auditLog, AuthenticatedRequest, authenticateUser } from '../auth/auth-middleware';
+import { userManager, UserRole } from '../auth/user-manager';
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6)
+});
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(2),
+  tenantId: z.string().optional()
+});
+
+const updateUserSchema = z.object({
+  name: z.string().min(2).optional(),
+  preferences: z.object({
+    language: z.string().optional(),
+    voiceSettings: z.object({
+      speed: z.number().min(0.5).max(2.0).optional(),
+      pitch: z.number().min(0.5).max(2.0).optional(),
+      volume: z.number().min(0.0).max(1.0).optional()
+    }).optional(),
+    notificationSettings: z.object({
+      email: z.boolean().optional(),
+      push: z.boolean().optional(),
+      sms: z.boolean().optional()
+    }).optional()
+  }).optional()
+}).partial();
+
+export async function authRoutes(fastify: FastifyInstance) {
+  // Register user
+  fastify.post('/auth/register', {
+    schema: {
+      body: registerSchema
+    }
+  }, async (request, reply) => {
+    try {
+      const { email, password, name, tenantId = 'default' } = request.body as z.infer<typeof registerSchema>;
+
+      // Check if user already exists
+      const existingUser = await userManager.getUserByEmail(email);
+      if (existingUser) {
+        return reply.code(409).send({ error: 'User already exists' });
+      }
+
+      // Create user
+      const user = await userManager.createUser({
+        email,
+        name,
+        role: UserRole.USER,
+        tenantId
+      });
+
+      // Create session
+      const session = await userManager.createSession(user.id, {
+        ipAddress: request.ip,
+        userAgent: request.headers['user-agent'] || ''
+      });
+
+      // Set session cookie
+      (reply as any).setCookie('sessionToken', session.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 // 24 hours
+      });
+
+      await auditLog(request as AuthenticatedRequest, reply, 'user_registered');
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          tenantId: user.tenantId
+        },
+        session: {
+          id: session.id
+        }
+      };
+    } catch (error) {
+      logger.error('Registration error', error);
+      return reply.code(500).send({ error: 'Registration failed' });
+    }
+  });
+
+  // Login user
+  fastify.post('/auth/login', {
+    schema: {
+      body: loginSchema
+    }
+  }, async (request, reply) => {
+    try {
+      const { email, password } = request.body as z.infer<typeof loginSchema>;
+
+      // Get user by email
+      const user = await userManager.getUserByEmail(email);
+      if (!user) {
+        return reply.code(401).send({ error: 'Invalid credentials' });
+      }
+
+      if (!user.isActive) {
+        return reply.code(403).send({ error: 'Account is inactive' });
+      }
+
+      // TODO: Add proper password hashing and verification
+      // For now, we'll just check if the user exists
+
+      // Update last login
+      await userManager.updateUser(user.id, { lastLoginAt: new Date() });
+
+      // Create session
+      const session = await userManager.createSession(user.id, {
+        ipAddress: request.ip,
+        userAgent: request.headers['user-agent'] || ''
+      });
+
+      // Set session cookie
+      (reply as any).setCookie('sessionToken', session.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 // 24 hours
+      });
+
+      await auditLog(request as AuthenticatedRequest, reply, 'user_login');
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          tenantId: user.tenantId
+        },
+        session: {
+          id: session.id
+        }
+      };
+    } catch (error) {
+      logger.error('Login error', error);
+      return reply.code(500).send({ error: 'Login failed' });
+    }
+  });
+
+  // Logout user
+  fastify.post('/auth/logout', async (request, reply) => {
+    try {
+      const sessionToken = (request as any).cookies?.sessionToken;
+      if (sessionToken) {
+        await userManager.deleteSession(sessionToken);
+      }
+
+      // Clear session cookie
+      (reply as any).clearCookie('sessionToken');
+
+      await auditLog(request as AuthenticatedRequest, reply, 'user_logout');
+
+      return { message: 'Logged out successfully' };
+    } catch (error) {
+      logger.error('Logout error', error);
+      return reply.code(500).send({ error: 'Logout failed' });
+    }
+  });
+
+  // Get current user
+  fastify.get('/auth/me', async (request, reply) => {
+    const authRequest = request as AuthenticatedRequest;
+    const authenticated = await authenticateUser(authRequest, reply);
+
+    if (!authenticated || !authRequest.user) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
+
+    const user = await userManager.getUserById(authRequest.user.id);
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        tenantId: user.tenantId,
+        preferences: user.preferences,
+        quota: user.quota
+      }
+    };
+  });
+
+  // Update user profile
+  fastify.put('/auth/profile', {
+    schema: {
+      body: updateUserSchema
+    }
+  }, async (request, reply) => {
+    const authRequest = request as AuthenticatedRequest;
+    const authenticated = await authenticateUser(authRequest, reply);
+
+    if (!authenticated || !authRequest.user) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
+
+    try {
+      const updates = request.body as z.infer<typeof updateUserSchema>;
+      const updatedUser = await userManager.updateUser(authRequest.user.id, updates as any);
+
+      if (!updatedUser) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      await auditLog(authRequest, reply, 'profile_updated');
+
+      return {
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+          tenantId: updatedUser.tenantId,
+          preferences: updatedUser.preferences
+        }
+      };
+    } catch (error) {
+      logger.error('Profile update error', error);
+      return reply.code(500).send({ error: 'Profile update failed' });
+    }
+  });
+
+  // Get user quota
+  fastify.get('/auth/quota', async (request, reply) => {
+    const authRequest = request as AuthenticatedRequest;
+    const authenticated = await authenticateUser(authRequest, reply);
+
+    if (!authenticated || !authRequest.user) {
+      return reply.code(401).send({ error: 'Authentication required' });
+    }
+
+    const user = await userManager.getUserById(authRequest.user.id);
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' });
+    }
+
+    return {
+      quota: user.quota
+    };
+  });
+
+  // Admin: Get all users (admin only)
+  fastify.get('/auth/admin/users', async (request, reply) => {
+    const authRequest = request as AuthenticatedRequest;
+    const authenticated = await authenticateUser(authRequest, reply, {
+      requireAuth: true,
+      requiredRoles: [UserRole.ADMIN]
+    });
+
+    if (!authenticated || !authRequest.user) {
+      return reply.code(401).send({ error: 'Admin access required' });
+    }
+
+    try {
+      const users = await userManager.getUsersByTenant(authRequest.user.tenantId);
+
+      return {
+        users: users.map(user => ({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+          lastLoginAt: user.lastLoginAt,
+          quota: user.quota
+        }))
+      };
+    } catch (error) {
+      logger.error('Get users error', error);
+      return reply.code(500).send({ error: 'Failed to get users' });
+    }
+  });
+
+  // Admin: Update user (admin only)
+  fastify.put('/auth/admin/users/:userId', async (request, reply) => {
+    const authRequest = request as AuthenticatedRequest;
+    const authenticated = await authenticateUser(authRequest, reply, {
+      requireAuth: true,
+      requiredRoles: [UserRole.ADMIN]
+    });
+
+    if (!authenticated || !authRequest.user) {
+      return reply.code(401).send({ error: 'Admin access required' });
+    }
+
+    try {
+      const { userId } = request.params as { userId: string };
+      const updates = request.body as Partial<{ role: UserRole; isActive: boolean; quota: any }>;
+
+      const updatedUser = await userManager.updateUser(userId, updates);
+      if (!updatedUser) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      await auditLog(authRequest, reply, 'admin_user_updated');
+
+      return {
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+          isActive: updatedUser.isActive,
+          quota: updatedUser.quota
+        }
+      };
+    } catch (error) {
+      logger.error('Update user error', error);
+      return reply.code(500).send({ error: 'Failed to update user' });
+    }
+  });
+
+  // Admin: Delete user (admin only)
+  fastify.delete('/auth/admin/users/:userId', async (request, reply) => {
+    const authRequest = request as AuthenticatedRequest;
+    const authenticated = await authenticateUser(authRequest, reply, {
+      requireAuth: true,
+      requiredRoles: [UserRole.ADMIN]
+    });
+
+    if (!authenticated || !authRequest.user) {
+      return reply.code(401).send({ error: 'Admin access required' });
+    }
+
+    try {
+      const { userId } = request.params as { userId: string };
+
+      const deleted = await userManager.deleteUser(userId);
+      if (!deleted) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      await auditLog(authRequest, reply, 'admin_user_deleted');
+
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      logger.error('Delete user error', error);
+      return reply.code(500).send({ error: 'Failed to delete user' });
+    }
+  });
+}

@@ -17,7 +17,6 @@ export function App() {
     const [debugInfo, setDebugInfo] = useState({ framesSent: 0, speechFramesSent: 0, lastFrameTime: 0 });
     const [connectionStatus, setConnectionStatus] = useState('checking');
     const [sttMode, setSttMode] = useState('real');
-    const [llmEnabled, setLlmEnabled] = useState(true);
     const [lastUserMessage, setLastUserMessage] = useState('');
     const [aiResponse, setAiResponse] = useState('');
     const [llmHealth, setLlmHealth] = useState(null);

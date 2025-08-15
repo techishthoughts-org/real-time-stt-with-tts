@@ -59,10 +59,13 @@ export function App() {
     'checking' | 'connected' | 'error'
   >('checking');
   const [sttMode, setSttMode] = useState<'simulated' | 'real'>('real');
-  const [llmEnabled, setLlmEnabled] = useState(true);
   const [lastUserMessage, setLastUserMessage] = useState('');
   const [aiResponse, setAiResponse] = useState('');
-  const [llmHealth, setLlmHealth] = useState<any>(null);
+  const [llmHealth, setLlmHealth] = useState<{
+    status?: string;
+    local?: { available: boolean };
+    cloud?: { available: boolean };
+  } | null>(null);
 
   const audioService = useRef<AudioCaptureService | null>(null);
   const sttService = useRef<RealTimeSTTService | null>(null);
