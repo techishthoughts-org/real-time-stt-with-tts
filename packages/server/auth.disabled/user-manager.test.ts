@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { UserManager, UserRole } from './user-manager';
 
 describe('UserManager', () => {
@@ -246,7 +246,7 @@ describe('UserManager', () => {
       };
 
       const user = await userManager.createUser(userData);
-      
+
       // Set quota to exceeded
       await userManager.updateUser(user.id, {
         quota: {
@@ -296,7 +296,7 @@ describe('UserManager', () => {
       const initialCount = user.quota.currentRequestsToday;
 
       await userManager.incrementRequestCount(user.id);
-      
+
       const updatedUser = await userManager.getUserById(user.id);
       expect(updatedUser?.quota.currentRequestsToday).toBe(initialCount + 1);
     });

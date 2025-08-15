@@ -1,0 +1,49 @@
+{
+  "name": "@voice/sdk-js",
+  "version": "0.1.0",
+  "description": "JavaScript/TypeScript SDK for Gon Voice Assistant",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "voice-assistant",
+    "ai",
+    "speech-to-text",
+    "text-to-speech",
+    "llm",
+    "sdk"
+  ],
+  "author": "Gon Voice Assistant Team",
+  "license": "MIT",
+  "dependencies": {
+    "@voice/schemas": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9"
+  },
+  "peerDependencies": {
+    "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    }
+  }
+}

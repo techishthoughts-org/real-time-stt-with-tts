@@ -179,7 +179,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       return reply.code(401).send({ error: 'Authentication required' });
     }
 
-    const user = await userManager.getUserById(authRequest.user.id);
+    const user = await userManager.getUserById(authRequest.user!.id);
     if (!user) {
       return reply.code(404).send({ error: 'User not found' });
     }
@@ -212,7 +212,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     try {
       const updates = request.body as z.infer<typeof updateUserSchema>;
-      const updatedUser = await userManager.updateUser(authRequest.user.id, updates as any);
+      const updatedUser = await userManager.updateUser(authRequest.user!.id, updates as any);
 
       if (!updatedUser) {
         return reply.code(404).send({ error: 'User not found' });
@@ -245,7 +245,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       return reply.code(401).send({ error: 'Authentication required' });
     }
 
-    const user = await userManager.getUserById(authRequest.user.id);
+    const user = await userManager.getUserById(authRequest.user!.id);
     if (!user) {
       return reply.code(404).send({ error: 'User not found' });
     }
@@ -268,7 +268,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      const users = await userManager.getUsersByTenant(authRequest.user.tenantId);
+      const users = await userManager.getUsersByTenant(authRequest.user!.tenantId);
 
       return {
         users: users.map(user => ({

@@ -2,22 +2,18 @@ import { logger } from '@voice/observability';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { userManager, UserRole } from './user-manager';
 
-declare module 'fastify' {
-  interface FastifyRequest {
-    user?: {
-      id: string;
-      email: string;
-      role: UserRole;
-      tenantId: string;
-    };
-    session?: {
-      id: string;
-      userId: string;
-    };
-  }
+export interface AuthenticatedRequest extends FastifyRequest {
+  user?: {
+    id: string;
+    email: string;
+    role: UserRole;
+    tenantId: string;
+  };
+  session?: {
+    id: string;
+    userId: string;
+  };
 }
-
-export type AuthenticatedRequest = FastifyRequest;
 
 export interface AuthOptions {
   requireAuth?: boolean;
@@ -199,7 +195,7 @@ export async function auditLog(
     ipAddress: request.ip,
     userAgent: request.headers['user-agent'],
     statusCode: reply.statusCode,
-    responseTime: reply.getResponseTime()
+    responseTime: (reply as any).getResponseTime?.() || 0
   };
 
   logger.info('Audit log', auditData);

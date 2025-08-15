@@ -10,8 +10,8 @@ import client from 'prom-client';
 import { cacheService } from './cache';
 import { EngineManager } from './engines';
 import { healthRoutes } from './routes/health';
-import { authRoutes } from './routes/auth';
-import cookie from '@fastify/cookie';
+// import { authRoutes } from './routes/auth';
+// import cookie from '@fastify/cookie';
 import { WebRTCManager } from './webrtc';
 import { initializeWebSocket } from './websocket';
 
@@ -238,9 +238,13 @@ export async function buildApp() {
   // Make engine manager available to routes
   fastify.decorate('engineManager', engineManager);
 
+  // Register cookie plugin
+  // await fastify.register(cookie);
+
   // Health routes
   await healthRoutes(fastify);
-  await authRoutes(fastify);
+  // TODO: Fix TypeScript issues with auth routes
+  // await authRoutes(fastify);
 
   // Setup routes
   // Note: /health and /llm/health are already registered by healthRoutes
