@@ -1,0 +1,174 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EngineManager } from './engines';
+
+// Mock dependencies
+vi.mock('@voice/llm-manager', () => ({
+  IntelligentLLMManager: vi.fn().mockImplementation(() => ({
+    askPersonalAssistant: vi.fn().mockResolvedValue('Mock AI response'),
+    streamResponse: vi.fn().mockImplementation(async (messages, callback) => {
+      callback('Mock', 'cloud');
+      callback(' response', 'cloud');
+    }),
+    healthCheck: vi.fn().mockResolvedValue({ status: 'ok' }),
+    getUsageStats: vi.fn().mockReturnValue({ requests: 10, latency: 100 })
+  }))
+}));
+
+vi.mock('@voice/stt-whisper-cpp', () => ({
+  WhisperCppEngine: vi.fn().mockImplementation(() => ({
+    transcribePartial: vi.fn().mockResolvedValue({
+      text: 'Mock transcription',
+      confidence: 0.9,
+      isFinal: false,
+      timestamp: Date.now()
+    }),
+    transcribeFinal: vi.fn().mockResolvedValue({
+      text: 'Final mock transcription',
+      confidence: 0.95,
+      isFinal: true,
+      timestamp: Date.now(),
+      duration: 1000
+    })
+  }))
+}));
+
+vi.mock('@voice/tts-piper', () => ({
+  PiperTTSEngine: vi.fn().mockImplementation(() => ({
+    speak: vi.fn().mockImplementation(async function* () {
+      yield {
+        data: new Uint8Array([1, 2, 3, 4]),
+        timestamp: Date.now(),
+        isLast: true
+      };
+    })
+  }))
+}));
+
+vi.mock('./cache', () => ({
+  cacheService: {
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    isAvailable: vi.fn().mockReturnValue(true),
+    generateKey: vi.fn().mockReturnValue('test-key')
+  }
+}));
+
+vi.mock('@voice/observability', () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn()
+  },
+  metrics: {
+    record: vi.fn(),
+    getStats: vi.fn().mockReturnValue({})
+  }
+}));
+
+describe('EngineManager', () => {
+  let engineManager: EngineManager;
+
+  beforeEach(() => {
+    engineManager = new EngineManager({
+      gpuEnabled: false,
+      openRouterEnabled: true,
+      cloudTtsEnabled: false,
+      externalSfuEnabled: false,
+      telemetryEnabled: false
+    });
+  });
+
+  describe('LLM Operations', () => {
+    it('should generate AI response', async () => {
+      const message = 'Hello AI';
+      const result = await engineManager.generateAIResponse(message);
+
+      expect(result).toBeDefined();
+      expect(result).toBe('Mock AI response');
+    });
+
+    it('should generate streaming AI response', async () => {
+      const message = 'Hello AI';
+      const chunks: string[] = [];
+      const sources: string[] = [];
+
+      await engineManager.generateStreamingAIResponse(
+        message,
+        (chunk, source) => {
+          chunks.push(chunk);
+          sources.push(source);
+        }
+      );
+
+      expect(chunks).toEqual(['Mock', ' response']);
+      expect(sources).toEqual(['cloud', 'cloud']);
+    });
+
+    it('should use cache for repeated queries', async () => {
+      const { cacheService } = await import('./cache');
+      const cachedResponse = 'Cached response';
+      vi.mocked(cacheService.get).mockResolvedValueOnce(cachedResponse);
+
+      const message = 'Hello AI';
+      const result = await engineManager.generateAIResponse(message);
+
+      expect(result).toBe(cachedResponse);
+      expect(cacheService.get).toHaveBeenCalled();
+    });
+
+    it('should cache new responses', async () => {
+      const { cacheService } = await import('./cache');
+      vi.mocked(cacheService.get).mockResolvedValueOnce(null);
+
+      const message = 'Hello AI';
+      await engineManager.generateAIResponse(message);
+
+      expect(cacheService.set).toHaveBeenCalled();
+    });
+  });
+
+  describe('Health Checks', () => {
+    it('should check LLM health', async () => {
+      const health = await engineManager.getLLMHealth();
+
+      expect(health).toBeDefined();
+      expect(health.status).toBe('ok');
+    });
+
+    it('should get stats', () => {
+      const stats = engineManager.getStats();
+
+      expect(stats).toBeDefined();
+      expect(stats.engines).toBeDefined();
+      expect(stats.llm).toBeDefined();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle initialization errors', async () => {
+      const { IntelligentLLMManager } = await import('@voice/llm-manager');
+      vi.mocked(IntelligentLLMManager).mockImplementationOnce(() => {
+        throw new Error('Initialization failed');
+      });
+
+      expect(() => new EngineManager({
+        gpuEnabled: false,
+        openRouterEnabled: true,
+        cloudTtsEnabled: false,
+        externalSfuEnabled: false,
+        telemetryEnabled: false
+      })).toThrow('Initialization failed');
+    });
+
+    it('should handle cache unavailability', async () => {
+      const { cacheService } = await import('./cache');
+      vi.mocked(cacheService.isAvailable).mockReturnValue(false);
+
+      const message = 'Hello AI';
+      const result = await engineManager.generateAIResponse(message);
+
+      expect(result).toBe('Mock AI response');
+      expect(cacheService.get).not.toHaveBeenCalled();
+    });
+  });
+});

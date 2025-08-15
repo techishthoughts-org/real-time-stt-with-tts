@@ -1,0 +1,96 @@
+{
+  "name": "voice-assistant-electron",
+  "version": "1.0.0",
+  "description": "Voice Assistant Desktop App for macOS",
+  "main": "dist/main/index.js",
+  "homepage": "./",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "vite build && electron-builder",
+    "build:mac": "vite build && electron-builder --mac",
+    "dist": "vite build && electron-builder --publish=never",
+    "dist:mac": "vite build && electron-builder --mac --publish=never",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "^5.0.0",
+    "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "electron-devtools-installer": "^3.2.0",
+    "concurrently": "^8.0.0",
+    "wait-on": "^7.0.0",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0"
+  },
+  "build": {
+    "appId": "com.voice.assistant",
+    "productName": "Voice Assistant",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/main/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "darkModeSupport": true,
+      "minimumSystemVersion": "10.15.0"
+    },
+    "dmg": {
+      "sign": false,
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "keywords": [
+    "voice-assistant",
+    "electron",
+    "macos",
+    "ai",
+    "llm",
+    "stt",
+    "tts"
+  ],
+  "author": "Voice Assistant Team",
+  "license": "MIT"
+}
