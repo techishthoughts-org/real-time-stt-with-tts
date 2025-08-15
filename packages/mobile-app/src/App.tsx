@@ -19,7 +19,7 @@ import { VoiceAssistantProvider } from './contexts/VoiceAssistantContext';
 import ConversationScreen from './screens/ConversationScreen';
 import HomeScreen from './screens/HomeScreen';
 import SettingsScreen from './screens/SettingsScreen';
-import LoginScreen from './screens/LoginScreen';
+import LoginScreen from './screens/LoadingScreen';
 import LoadingScreen from './screens/LoadingScreen';
 import { VoiceTestScreen } from './screens/VoiceTestScreen';
 

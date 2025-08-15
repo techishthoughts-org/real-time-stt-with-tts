@@ -4,7 +4,6 @@
     "slug": "gon-voice-assistant",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
@@ -25,7 +24,6 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#667eea"
       },
       "package": "com.gonvoice.assistant",
@@ -37,7 +35,6 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "output": "static"
     },
@@ -50,8 +47,7 @@
             "useFrameworks": "static"
           }
         }
-      ],
-      "expo-router"
+      ]
     ],
     "extra": {
       "eas": {
