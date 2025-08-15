@@ -4,12 +4,28 @@ import { EngineManager } from './engines';
 // Mock dependencies
 vi.mock('@voice/llm-manager', () => ({
   IntelligentLLMManager: vi.fn().mockImplementation(() => ({
-    askPersonalAssistant: vi.fn().mockResolvedValue('Mock AI response'),
+    generateResponseWithPersona: vi.fn().mockResolvedValue({
+      content: 'Mock AI response',
+      source: 'cloud',
+      model: 'test-model',
+      latency: 100,
+      fallbackUsed: false
+    }),
     streamResponse: vi.fn().mockImplementation(async (messages, callback) => {
       callback('Mock', 'cloud');
       callback(' response', 'cloud');
     }),
-    healthCheck: vi.fn().mockResolvedValue({ status: 'ok' }),
+    healthCheck: vi.fn().mockResolvedValue({
+      local: { available: false, models: [] },
+      cloud: { available: true, models: [] },
+      config: {
+        preferLocal: false,
+        voiceOptimized: true,
+        fallbackToCloud: true,
+        cloudTimeout: 15000,
+        language: 'pt-BR'
+      }
+    }),
     getUsageStats: vi.fn().mockReturnValue({ requests: 10, latency: 100 })
   }))
 }));
@@ -57,7 +73,8 @@ vi.mock('./cache', () => ({
 vi.mock('@voice/observability', () => ({
   logger: {
     info: vi.fn(),
-    error: vi.fn()
+    error: vi.fn(),
+    warn: vi.fn()
   },
   metrics: {
     record: vi.fn(),
@@ -84,7 +101,8 @@ describe('EngineManager', () => {
       const result = await engineManager.generateAIResponse(message);
 
       expect(result).toBeDefined();
-      expect(result).toBe('Mock AI response');
+      expect(result.response).toBe('Mock AI response');
+      expect(result.model).toBe('test-model');
     });
 
     it('should generate streaming AI response', async () => {
@@ -107,12 +125,17 @@ describe('EngineManager', () => {
     it('should use cache for repeated queries', async () => {
       const { cacheService } = await import('./cache');
       const cachedResponse = 'Cached response';
-      vi.mocked(cacheService.get).mockResolvedValueOnce(cachedResponse);
+      vi.mocked(cacheService.get).mockResolvedValueOnce(JSON.stringify({
+        response: cachedResponse,
+        model: 'test-model',
+        persona: 'Gon',
+        timestamp: Date.now()
+      }));
 
       const message = 'Hello AI';
       const result = await engineManager.generateAIResponse(message);
 
-      expect(result).toBe(cachedResponse);
+      expect(result.response).toBe(cachedResponse);
       expect(cacheService.get).toHaveBeenCalled();
     });
 
@@ -132,7 +155,7 @@ describe('EngineManager', () => {
       const health = await engineManager.getLLMHealth();
 
       expect(health).toBeDefined();
-      expect(health.status).toBe('ok');
+      expect(health.cloud.available).toBe(true);
     });
 
     it('should get stats', () => {
@@ -162,13 +185,16 @@ describe('EngineManager', () => {
 
     it('should handle cache unavailability', async () => {
       const { cacheService } = await import('./cache');
+      vi.clearAllMocks();
       vi.mocked(cacheService.isAvailable).mockReturnValue(false);
 
       const message = 'Hello AI';
       const result = await engineManager.generateAIResponse(message);
 
-      expect(result).toBe('Mock AI response');
+      expect(result.response).toBe('Mock AI response');
+      // Cache should not be called when unavailable
       expect(cacheService.get).not.toHaveBeenCalled();
+      expect(cacheService.set).not.toHaveBeenCalled();
     });
   });
 });

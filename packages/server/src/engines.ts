@@ -104,23 +104,27 @@ export class EngineManager {
     const startTime = Date.now();
 
     try {
-      // Check cache first
-      const cacheKey = this.generateCacheKey(message, context);
-      const cached = await cacheService.get(cacheKey);
+      // Check cache first if available
+      let cached = null;
+      let cacheKey = '';
+      if (cacheService.isAvailable()) {
+        cacheKey = this.generateCacheKey(message, context);
+        cached = await cacheService.get(cacheKey);
 
-      if (cached) {
-        try {
-          const cachedData = JSON.parse(cached);
-          logger.info('💾 Cache hit for AI response');
-          return {
-            response: cachedData.response,
-            latency: Date.now() - startTime,
-            model: cachedData.model,
-            persona: cachedData.persona || 'Gon',
-          };
-        } catch (parseError) {
-          logger.warn('Failed to parse cached response, clearing cache');
-          await cacheService.del(cacheKey);
+        if (cached) {
+          try {
+            const cachedData = JSON.parse(cached);
+            logger.info('💾 Cache hit for AI response');
+            return {
+              response: cachedData.response,
+              latency: Date.now() - startTime,
+              model: cachedData.model,
+              persona: cachedData.persona || 'Gon',
+            };
+          } catch (parseError) {
+            logger.warn('Failed to parse cached response, clearing cache');
+            await cacheService.del(cacheKey);
+          }
         }
       }
 
@@ -142,15 +146,17 @@ export class EngineManager {
       const response = result.content;
       const latency = Date.now() - startTime;
 
-      // Cache the response
-      const responseData = {
-        response,
-        model: result.model,
-        persona: 'Gon',
-        timestamp: Date.now(),
-      };
+      // Cache the response if cache is available
+      if (cacheService.isAvailable() && cacheKey) {
+        const responseData = {
+          response,
+          model: result.model,
+          persona: 'Gon',
+          timestamp: Date.now(),
+        };
 
-      await cacheService.set(cacheKey, JSON.stringify(responseData), 3600); // 1 hour TTL
+        await cacheService.set(cacheKey, JSON.stringify(responseData), 3600); // 1 hour TTL
+      }
 
       logger.info('🤖 Gon response generated', {
         response: response.substring(0, 100) + '...',

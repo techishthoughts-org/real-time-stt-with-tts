@@ -113,21 +113,19 @@ describe('CacheService', () => {
       const message = 'Hello world';
       const context = 'test context';
 
-      const key = cacheService.generateKey(message, context);
+      const key = cacheService.generateKey('llm', 'response', message + context);
 
       expect(key).toContain('llm:');
-      expect(key).toContain(message);
-      expect(key).toContain(context);
+      expect(key).toContain('response:');
     });
 
     it('should generate cache key without context', () => {
       const message = 'Hello world';
 
-      const key = cacheService.generateKey(message);
+      const key = cacheService.generateKey('llm', 'response', message);
 
       expect(key).toContain('llm:');
-      expect(key).toContain(message);
-      expect(key).not.toContain('undefined');
+      expect(key).toContain('response:');
     });
   });
 
@@ -151,13 +149,15 @@ describe('CacheService', () => {
     it('should handle Redis set errors', async () => {
       vi.mocked(mockRedis.setex).mockRejectedValue(new Error('Redis error'));
 
-      await expect(cacheService.set('test-key', 'value')).rejects.toThrow('Redis error');
+      // Should not throw, should fallback to memory cache
+      await expect(cacheService.set('test-key', 'value')).resolves.not.toThrow();
     });
 
     it('should handle Redis del errors', async () => {
       vi.mocked(mockRedis.del).mockRejectedValue(new Error('Redis error'));
 
-      await expect(cacheService.del('test-key')).rejects.toThrow('Redis error');
+      // Should not throw, should still remove from memory cache
+      await expect(cacheService.del('test-key')).resolves.not.toThrow();
     });
 
     it('should handle operations when Redis is not available', async () => {
@@ -170,14 +170,20 @@ describe('CacheService', () => {
       const getResult = await cacheService.get('test-key');
       expect(getResult).toBe(null);
 
-      await expect(cacheService.set('test-key', 'value')).rejects.toThrow();
-      await expect(cacheService.del('test-key')).rejects.toThrow();
+      // Should not throw, should use memory cache fallback
+      await expect(cacheService.set('test-key', 'value')).resolves.not.toThrow();
+      await expect(cacheService.del('test-key')).resolves.not.toThrow();
     });
   });
 
   describe('Connection Management', () => {
     it('should handle multiple connections gracefully', async () => {
       await cacheService.connect('redis://localhost:6379');
+      const connectCallback = vi.mocked(mockRedis.on).mock.calls.find(
+        call => call[0] === 'connect'
+      )?.[1];
+      if (connectCallback) connectCallback();
+
       await cacheService.connect('redis://localhost:6379'); // Should not throw
 
       expect(cacheService.isAvailable()).toBe(true);

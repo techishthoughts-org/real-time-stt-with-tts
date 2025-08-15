@@ -1,6 +1,7 @@
 import { AgentMessage } from '@voice/schemas';
-import CircuitBreaker from 'opossum';
 import { z } from 'zod';
+import { CircuitBreaker } from '../../../server/src/circuit-breaker';
+import { AdvancedRateLimiter } from '../../../server/src/rate-limiter';
 
 // OpenRouter API configuration
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
@@ -147,6 +148,7 @@ export class OpenRouterEngine {
   private baseUrl: string;
   private headers: Record<string, string>;
   private circuitBreaker: CircuitBreaker;
+  private rateLimiter: AdvancedRateLimiter;
 
   constructor(config: Partial<OpenRouterEngineConfig> = {}) {
     const apiKey = config.apiKey || process.env.OPENROUTER_API_KEY;
@@ -175,23 +177,16 @@ export class OpenRouterEngine {
     };
 
     // Circuit breaker for API calls
-    this.circuitBreaker = new CircuitBreaker(this.makeApiCall.bind(this), {
-      timeout: this.config.timeout,
-      errorThresholdPercentage: 50,
-      resetTimeout: 30000, // 30s reset
-      volumeThreshold: 5,
+    this.circuitBreaker = new CircuitBreaker('openrouter', {
+      failureThreshold: 5,
+      recoveryTimeout: 30000, // 30s reset
+      expectedResponseTime: 10000, // 10s expected response time
     });
 
-    this.circuitBreaker.on('open', () => {
-      console.error('🚨 OpenRouter circuit breaker opened');
-    });
-
-    this.circuitBreaker.on('halfOpen', () => {
-      console.log('🔄 OpenRouter circuit breaker half-open');
-    });
-
-    this.circuitBreaker.on('close', () => {
-      console.log('✅ OpenRouter circuit breaker closed');
+    // Rate limiter for OpenRouter
+    this.rateLimiter = new AdvancedRateLimiter({
+      maxRequests: 60, // 60 requests per minute
+      windowMs: 60000, // 1 minute window
     });
   }
 
@@ -279,7 +274,10 @@ export class OpenRouterEngine {
       });
 
       // Use circuit breaker for API call
-      const data = await this.circuitBreaker.fire('/chat/completions', request);
+      const data = await this.circuitBreaker.execute(
+        () => this.makeApiCall('/chat/completions', request),
+        () => this.getFallbackResponse()
+      );
       const result = OpenRouterResponse.parse(data);
 
       if (!result.choices[0]?.message?.content) {
@@ -515,5 +513,31 @@ Guidelines:
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space
       .replace(/\n\s*\n/g, '\n') // Remove empty lines
       .trim();
+  }
+
+  // Fallback response when API is unavailable
+  private getFallbackResponse(): any {
+    console.log('🔄 Using fallback response for OpenRouter');
+    return {
+      id: 'fallback-' + Date.now(),
+      object: 'chat.completion',
+      created: Date.now(),
+      model: 'fallback',
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: 'assistant',
+            content: 'Desculpe, estou com problemas técnicos no momento. Pode tentar novamente em alguns segundos?',
+          },
+          finish_reason: 'stop',
+        },
+      ],
+      usage: {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+      },
+    };
   }
 }

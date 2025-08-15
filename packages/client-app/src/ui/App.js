@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { config } from '../config';
 import { AudioCaptureService } from '../services/audioCapture';
 import { RealTimeSTTService } from '../services/realTimeSttService';
+import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
+import { PWAUpdateNotification } from '../components/PWAUpdateNotification';
 export function App() {
     const [flags, setFlags] = useState(null);
     const [stats, setStats] = useState(null);
@@ -278,7 +280,7 @@ export function App() {
             fontFamily: 'system-ui, sans-serif',
             padding: 24,
             maxWidth: 900,
-        }, children: [_jsx("h1", { children: "Voice Client (Local by default)" }), connectionStatus === 'error' && (_jsxs("div", { style: {
+        }, children: [_jsx(PWAUpdateNotification, {}), _jsx(PWAInstallPrompt, {}), _jsx("h1", { children: "Voice Client (Local by default)" }), connectionStatus === 'error' && (_jsxs("div", { style: {
                     backgroundColor: '#f8d7da',
                     color: '#721c24',
                     padding: '12px',

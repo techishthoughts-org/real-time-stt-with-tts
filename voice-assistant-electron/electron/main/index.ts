@@ -4,6 +4,8 @@ import { join } from 'path';
 // Import our modules
 import { audioProcessor } from './audio';
 import { memoryManager } from './memory';
+import { menuBarService } from './menu-bar';
+import { notificationService } from './notifications';
 import { serverBridge } from './server-bridge';
 
 function createWindow(): void {
@@ -28,6 +30,12 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show();
+
+    // Set up menu bar service with main window
+    menuBarService.setMainWindow(mainWindow);
+
+    // Show welcome notification
+    notificationService.showWelcome();
   });
 
   // Load the app
@@ -114,6 +122,9 @@ app.whenReady().then(() => {
   serverBridge;
   memoryManager;
 
+  // Request notification permissions
+  notificationService.requestPermission();
+
   createWindow();
 
   app.on('activate', function () {
@@ -122,7 +133,14 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    menuBarService.destroy();
+    app.quit();
+  }
+});
+
+app.on('before-quit', () => {
+  menuBarService.destroy();
 });
 
 // GPU acceleration

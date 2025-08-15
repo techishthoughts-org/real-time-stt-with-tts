@@ -62,7 +62,7 @@ export class WebRTCManager {
       console.log('🏁 SERVER: Finalizing transcription...');
 
       try {
-        const final = await this.engineManager.processFinalTranscription();
+        const final = await this.engineManager.processFinalTranscription([]);
 
         if (final) {
           console.log(

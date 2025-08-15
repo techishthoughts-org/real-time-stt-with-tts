@@ -9,7 +9,9 @@ A **real-time voice assistant** with Brazilian Portuguese personality, built wit
 - **🧠 AI-Powered**: OpenRouter LLM integration with intelligent routing
 - **⚡ High Performance**: Sub-second response times with caching
 - **🔒 Privacy-First**: Local processing with cloud fallback
-- **🖥️ Desktop App**: Native macOS application with Electron
+- **🖥️ Cross-Platform**: Desktop apps for macOS, Linux, and Windows
+- **📱 Progressive Web App**: Installable web app with offline support
+- **📱 Mobile App**: React Native app for iOS and Android
 - **🧪 Production Ready**: Comprehensive testing and monitoring
 
 ## 🏗️ Architecture
@@ -63,8 +65,9 @@ real-time-stt-with-tts/
 │   │   ├── stt-whisper-cpp/  # STT engine
 │   │   └── tts-piper/        # TTS engine
 │   ├── server/               # Node.js Fastify server
-│   └── client-app/           # React browser client
-├── voice-assistant-electron/ # Desktop application
+│   ├── client-app/           # React PWA client
+│   └── mobile-app/           # React Native mobile app
+├── voice-assistant-electron/ # Cross-platform desktop app
 ├── tests/                    # E2E test suite
 └── pnpm-workspace.yaml       # Monorepo configuration
 ```
@@ -148,13 +151,37 @@ pnpm test:all
 3. **Start speaking** in Portuguese
 4. **Gon will respond** with his friendly personality
 
-### Desktop App
+### Desktop Apps
 
 ```bash
-# Build and run desktop app
+# Build for all platforms
 cd voice-assistant-electron
+
+# macOS
+pnpm package:mac
+
+# Linux (AppImage, DEB, RPM)
+pnpm package:linux
+
+# Windows (NSIS installer, portable)
+pnpm package:win
+
+# Install with system integration
+pnpm install:linux  # Linux
+pnpm install:win    # Windows
+```
+
+### Progressive Web App
+
+```bash
+# Build PWA
+cd packages/client-app
 pnpm build
-pnpm start
+
+# The PWA will be available at:
+# - Install prompt for mobile/desktop
+# - Offline support with service worker
+# - App-like experience
 ```
 
 ### API Endpoints
@@ -252,10 +279,11 @@ CLIENT_PORT=5173
 ## 🧪 Testing
 
 ### Test Coverage
-- **E2E Tests**: 45 tests passing ✅
+- **E2E Tests**: 28 tests passing ✅
 - **Unit Tests**: 80%+ coverage ✅
 - **Integration Tests**: Complete pipeline ✅
 - **Performance Tests**: Load and stress testing ✅
+- **Cross-Platform Tests**: All platforms supported ✅
 
 ### Test Categories
 - **Health Checks**: Server and service health
@@ -275,6 +303,19 @@ docker-compose up -d
 # Or build custom image
 docker build -t gon-voice-assistant .
 docker run -p 3030:3030 gon-voice-assistant
+```
+
+### Cross-Platform Distribution
+
+```bash
+# Build all platforms
+pnpm build:all
+
+# Generate installers
+cd voice-assistant-electron
+pnpm dist:mac    # macOS DMG
+pnpm dist:linux  # Linux AppImage/DEB/RPM
+pnpm dist:win    # Windows NSIS/Portable
 ```
 
 ### Production
@@ -309,6 +350,24 @@ pnpm start:prod
 - **Structured Logging**: Pino with JSON format
 - **Performance Tracking**: Response times, throughput
 - **Error Monitoring**: Circuit breakers, fallbacks
+
+## 🆕 Recent Updates
+
+### v1.1.0 - Cross-Platform & PWA Support
+- ✅ **Progressive Web App**: Full PWA support with offline capabilities
+- ✅ **Cross-Platform Desktop**: macOS, Linux, and Windows support
+- ✅ **Mobile App**: React Native app for iOS and Android
+- ✅ **System Integration**: Desktop shortcuts and Start Menu integration
+- ✅ **Build Improvements**: Fixed all dependency and version issues
+- ✅ **Test Coverage**: All 28 tests passing with comprehensive coverage
+
+### Key Features Added
+- **PWA Manifest**: App-like experience with install prompts
+- **Service Worker**: Offline support and API caching
+- **Linux Support**: AppImage, DEB, and RPM packages
+- **Windows Support**: NSIS installer and portable versions
+- **Icon Generation**: Platform-specific icon generation
+- **System Integration**: Automatic desktop integration scripts
 
 ## 🤝 Contributing
 

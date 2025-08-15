@@ -1,6 +1,9 @@
 import { config } from '@voice/config';
 import { FastifyInstance } from 'fastify';
 import { cacheService } from '../cache';
+import { circuitBreakerManager } from '../circuit-breaker';
+import { healthMonitor } from '../health-monitor';
+import { userRateLimiter } from '../rate-limiter';
 
 export async function healthRoutes(fastify: FastifyInstance) {
   // Basic health check
@@ -78,7 +81,9 @@ export async function healthRoutes(fastify: FastifyInstance) {
         features: {
           streaming: true,
           caching: true,
-          circuitBreaker: true
+          circuitBreaker: true,
+          rateLimiting: true,
+          errorHandling: true
         }
       };
     } catch (error) {
@@ -88,5 +93,49 @@ export async function healthRoutes(fastify: FastifyInstance) {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
+  });
+
+  // Advanced health metrics endpoint
+  fastify.get('/health/metrics', async (request, reply) => {
+    const metrics = healthMonitor.getHealthMetrics();
+    const overallHealth = healthMonitor.getOverallHealth();
+    const serviceHealth = healthMonitor.getServiceHealth();
+
+    return {
+      status: overallHealth,
+      timestamp: new Date().toISOString(),
+      metrics,
+      services: serviceHealth,
+      circuitBreakers: circuitBreakerManager.getStats(),
+      rateLimiting: userRateLimiter.getStats(),
+    };
+  });
+
+  // System status endpoint
+  fastify.get('/health/status', async (request, reply) => {
+    const overallHealth = healthMonitor.getOverallHealth();
+    const metrics = healthMonitor.getHealthMetrics();
+
+    return {
+      status: overallHealth,
+      uptime: `${Math.round(metrics.uptime / 1000 / 60)} minutes`,
+      memory: `${metrics.memory.rss}MB`,
+      requests: {
+        total: metrics.requests.total,
+        successRate: metrics.requests.total > 0
+          ? `${((metrics.requests.successful / metrics.requests.total) * 100).toFixed(2)}%`
+          : '0%',
+        avgResponseTime: `${metrics.requests.averageResponseTime}ms`,
+      },
+      cache: {
+        hitRate: `${(metrics.cache.hitRate * 100).toFixed(2)}%`,
+      },
+      errors: {
+        total: metrics.errors.total,
+        rate: metrics.requests.total > 0
+          ? `${((metrics.errors.total / metrics.requests.total) * 100).toFixed(2)}%`
+          : '0%',
+      },
+    };
   });
 }

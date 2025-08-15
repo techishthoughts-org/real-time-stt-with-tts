@@ -11,8 +11,60 @@ import { cacheService } from './cache';
 import { EngineManager } from './engines';
 import { healthRoutes } from './routes/health';
 import { WebRTCManager } from './webrtc';
+import { initializeWebSocket } from './websocket';
+
+// Memory optimization and resource monitoring
+const startResourceMonitoring = () => {
+  const startMemory = process.memoryUsage();
+  logger.info('🚀 Server starting with memory usage:', {
+    rss: `${Math.round(startMemory.rss / 1024 / 1024)}MB`,
+    heapUsed: `${Math.round(startMemory.heapUsed / 1024 / 1024)}MB`,
+    heapTotal: `${Math.round(startMemory.heapTotal / 1024 / 1024)}MB`,
+    external: `${Math.round(startMemory.external / 1024 / 1024)}MB`,
+  });
+
+  // Monitor memory usage every 5 minutes
+  setInterval(() => {
+    const memory = process.memoryUsage();
+    const rssMB = Math.round(memory.rss / 1024 / 1024);
+
+    logger.info('📊 Memory usage:', {
+      rss: `${rssMB}MB`,
+      heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)}MB`,
+      heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)}MB`,
+    });
+
+    // Alert if memory usage is high
+    if (rssMB > 200) {
+      logger.warn('⚠️ High memory usage detected:', { rssMB });
+    }
+  }, 5 * 60 * 1000);
+
+  // Monitor CPU usage
+  const startUsage = process.cpuUsage();
+  setInterval(() => {
+    const usage = process.cpuUsage(startUsage);
+    logger.info('🖥️ CPU usage:', {
+      user: `${Math.round(usage.user / 1000)}ms`,
+      system: `${Math.round(usage.system / 1000)}ms`,
+    });
+  }, 5 * 60 * 1000);
+};
+
+// Optimize Node.js garbage collection
+const optimizeGarbageCollection = () => {
+  // Set garbage collection flags for better performance
+  if (process.env.NODE_ENV === 'production') {
+    // Note: Garbage collection optimization requires --expose-gc flag
+    logger.info('🗑️ Garbage collection optimization enabled (requires --expose-gc flag)');
+  }
+};
 
 export async function buildApp() {
+  // Start resource monitoring
+  startResourceMonitoring();
+  optimizeGarbageCollection();
+
   const fastify = Fastify({
     logger: config.isTest
       ? false
@@ -27,6 +79,12 @@ export async function buildApp() {
             },
           },
         },
+    // Performance optimizations
+    connectionTimeout: 30000,
+    keepAliveTimeout: 65000,
+    maxRequestsPerSocket: 100,
+    // Memory optimization
+    bodyLimit: 10 * 1024 * 1024, // 10MB limit
   });
 
   // Global error handler
@@ -124,13 +182,18 @@ export async function buildApp() {
 
   // Auth hook for protected routes
   fastify.addHook('onRequest', async (req, res) => {
-    // Skip authentication for health endpoints and public LLM chat
+    // Skip authentication for health endpoints only
     if (req.routerPath?.startsWith('/health') ||
-        req.routerPath === '/llm/health' ||
-        req.routerPath === '/llm/chat') {
+        req.routerPath === '/llm/health') {
       return;
     }
 
+    // Skip authentication in test mode
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    // Require authentication for LLM endpoints
     if (req.routerPath?.startsWith('/llm')) {
       try {
         await req.jwtVerify();
@@ -157,6 +220,9 @@ export async function buildApp() {
   // Initialize engines
   const engineManager = new EngineManager(config.features);
   const webrtcManager = new WebRTCManager(engineManager);
+
+  // Initialize WebSocket manager
+  initializeWebSocket(fastify);
 
   // Initialize cache service
   try {

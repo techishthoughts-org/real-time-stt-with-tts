@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { config } from '../config';
 import { AudioCaptureService } from '../services/audioCapture';
 import { RealTimeSTTService } from '../services/realTimeSttService';
+import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
+import { PWAUpdateNotification } from '../components/PWAUpdateNotification';
 
 type Flags = {
   gpuEnabled: boolean;
@@ -372,6 +374,8 @@ export function App() {
         maxWidth: 900,
       }}
     >
+      <PWAUpdateNotification />
+      <PWAInstallPrompt />
       <h1>Voice Client (Local by default)</h1>
 
       {connectionStatus === 'error' && (

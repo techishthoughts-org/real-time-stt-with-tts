@@ -8,8 +8,21 @@
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "build": "vite build && electron-builder",
     "build:mac": "vite build && electron-builder --mac",
+    "build:linux": "vite build && electron-builder --linux",
+    "build:win": "vite build && electron-builder --win",
     "dist": "vite build && electron-builder --publish=never",
     "dist:mac": "vite build && electron-builder --mac --publish=never",
+    "dist:linux": "vite build && electron-builder --linux --publish=never",
+    "dist:win": "vite build && electron-builder --win --publish=never",
+    "sign": "node scripts/sign.js",
+    "sign:mac": "npm run build:mac && npm run sign",
+    "notarize": "node scripts/notarize.js",
+    "package:mac": "npm run build:mac && npm run sign && npm run notarize",
+    "package:linux": "node scripts/generate-icons.js && npm run build:linux",
+    "install:linux": "npm run package:linux && ./scripts/linux-integration.sh",
+    "package:win": "node scripts/generate-icons.js && npm run build:win",
+    "install:win": "npm run package:win && powershell -ExecutionPolicy Bypass -File scripts/windows-integration.ps1 -Install",
+    "generate-icons": "node scripts/generate-icons.js",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
@@ -65,6 +78,44 @@
       "entitlementsInherit": "build/entitlements.mac.plist",
       "darkModeSupport": true,
       "minimumSystemVersion": "10.15.0"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "rpm",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "category": "Utility",
+      "icon": "build/icon.png",
+      "desktop": {
+        "Name": "Gon Voice Assistant",
+        "Comment": "Your personal AI voice assistant",
+        "Keywords": "voice;assistant;ai;llm;stt;tts",
+        "StartupWMClass": "Gon Voice Assistant"
+      }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
     },
     "dmg": {
       "sign": false,

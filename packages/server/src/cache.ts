@@ -108,27 +108,47 @@ export class CacheService {
 
   async set(key: string, value: string, ttl: number = 3600): Promise<void> {
     if (!this.isAvailable()) {
-      throw new Error('Redis not available');
+      // Store in memory cache as fallback
+      this.setInMemory(key, value);
+      return;
     }
 
     try {
       await this.redis!.setex(key, ttl, value);
+      // Also store in memory cache for faster access
+      this.setInMemory(key, value);
     } catch (error) {
       logger.error('Redis set error:', error);
-      throw error;
+      // Fallback to memory cache
+      this.setInMemory(key, value);
     }
   }
 
   async del(key: string): Promise<void> {
+    // Always remove from memory cache
+    this.memoryCache.delete(key);
+
     if (!this.isAvailable()) {
-      throw new Error('Redis not available');
+      return;
     }
 
     try {
       await this.redis!.del(key);
     } catch (error) {
       logger.error('Redis del error:', error);
-      throw error;
+    }
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    if (!this.isAvailable()) {
+      return [];
+    }
+
+    try {
+      return await this.redis!.keys(pattern);
+    } catch (error) {
+      logger.error('Redis keys error:', error);
+      return [];
     }
   }
 

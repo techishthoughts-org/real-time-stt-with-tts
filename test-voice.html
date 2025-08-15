@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Gon Voice Assistant - WebRTC Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .status-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+        .status-connecting { background: #ffc107; }
+
+        .controls-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .control-group h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .audio-visualizer {
+            background: #000;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+        }
+
+        .audio-bars {
+            display: flex;
+            align-items: end;
+            gap: 3px;
+            height: 60px;
+        }
+
+        .audio-bar {
+            width: 4px;
+            background: #667eea;
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        .conversation-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .conversation-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .conversation-panel h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .message-user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message-gon {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .log-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .log-entry {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 5px;
+            background: #fff;
+        }
+
+        .log-info { border-left: 3px solid #17a2b8; }
+        .log-success { border-left: 3px solid #28a745; }
+        .log-warning { border-left: 3px solid #ffc107; }
+        .log-error { border-left: 3px solid #dc3545; }
+
+        .metrics-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .conversation-section {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-section {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 Gon Voice Assistant</h1>
+            <p>WebRTC Voice Testing Interface</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Status Section -->
+            <div class="status-section">
+                <div class="status-card">
+                    <h3>🔗 Server Status</h3>
+                    <div id="server-status">
+                        <span class="status-indicator status-offline"></span>
+                        <span id="server-text">Checking...</span>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <h3>🎤 Microphone Status</h3>
+                    <div id="mic-status">
+                        <span class="status-indicator status-offline"></span>
+                        <span id="mic-text">Not connected</span>
+                    </div>
+                </div>
+
+                <div class="status-card">
+                    <h3>🧠 AI Status</h3>
+                    <div id="ai-status">
+                        <span class="status-indicator status-offline"></span>
+                        <span id="ai-text">Checking...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Visualizer -->
+            <div class="audio-visualizer">
+                <div id="audio-display">
+                    <div class="audio-bars" id="audio-bars">
+                        <!-- Audio bars will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="control-group">
+                    <h3>🎤 Voice Controls</h3>
+                    <button class="btn btn-success" id="startBtn" onclick="startVoiceCapture()">
+                        🎙️ Start Voice
+                    </button>
+                    <button class="btn btn-danger" id="stopBtn" onclick="stopVoiceCapture()" disabled>
+                        ⏹️ Stop Voice
+                    </button>
+                    <button class="btn btn-warning" onclick="clearConversation()">
+                        🗑️ Clear Chat
+                    </button>
+                </div>
+
+                <div class="control-group">
+                    <h3>🧪 Test Functions</h3>
+                    <button class="btn" onclick="testServerConnection()">
+                        🔗 Test Server
+                    </button>
+                    <button class="btn" onclick="testGonResponse()">
+                        🧠 Test Gon
+                    </button>
+                    <button class="btn" onclick="loadGonGreeting()">
+                        🎭 Load Greeting
+                    </button>
+                </div>
+
+                <div class="control-group">
+                    <h3>⚙️ Settings</h3>
+                    <button class="btn" onclick="toggleAutoStart()">
+                        🔄 Auto Start
+                    </button>
+                    <button class="btn" onclick="clearCache()">
+                        🗑️ Clear Cache
+                    </button>
+                    <button class="btn" onclick="exportLogs()">
+                        📤 Export Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- Metrics Section -->
+            <div class="metrics-section">
+                <div class="metric-card">
+                    <div class="metric-value" id="response-time">0ms</div>
+                    <div class="metric-label">Response Time</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="cache-hits">0</div>
+                    <div class="metric-label">Cache Hits</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="total-requests">0</div>
+                    <div class="metric-label">Total Requests</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="audio-level">0%</div>
+                    <div class="metric-label">Audio Level</div>
+                </div>
+            </div>
+
+            <!-- Conversation Section -->
+            <div class="conversation-section">
+                <div class="conversation-panel">
+                    <h3>💬 Conversation History</h3>
+                    <div id="conversation"></div>
+                </div>
+
+                <div class="conversation-panel">
+                    <h3>🎭 Gon's Responses</h3>
+                    <div id="gon-responses"></div>
+                </div>
+            </div>
+
+            <!-- Log Section -->
+            <div class="log-section">
+                <h3>📋 System Logs</h3>
+                <div id="logs"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let mediaStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let scriptProcessor = null;
+        let isRecording = false;
+        let recognition = null;
+        let autoStart = false;
+        let metrics = {
+            responseTime: 0,
+            cacheHits: 0,
+            totalRequests: 0,
+            audioLevel: 0
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Gon Voice Assistant Test Interface loaded', 'info');
+            testServerConnection();
+            loadGonGreeting();
+            setupAudioVisualizer();
+        });
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Update metrics display
+        function updateMetrics() {
+            document.getElementById('response-time').textContent = `${metrics.responseTime}ms`;
+            document.getElementById('cache-hits').textContent = metrics.cacheHits;
+            document.getElementById('total-requests').textContent = metrics.totalRequests;
+            document.getElementById('audio-level').textContent = `${Math.round(metrics.audioLevel)}%`;
+        }
+
+        // Setup audio visualizer
+        function setupAudioVisualizer() {
+            const audioBars = document.getElementById('audio-bars');
+            for (let i = 0; i < 50; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'audio-bar';
+                bar.style.height = '2px';
+                audioBars.appendChild(bar);
+            }
+        }
+
+        // Update audio visualizer
+        function updateAudioVisualizer(level) {
+            const bars = document.querySelectorAll('.audio-bar');
+            const barHeight = Math.max(2, (level / 100) * 60);
+
+            bars.forEach((bar, index) => {
+                const height = barHeight * (1 - Math.abs(index - 25) / 25);
+                bar.style.height = `${Math.max(2, height)}px`;
+            });
+        }
+
+        // Test server connection
+        async function testServerConnection() {
+            try {
+                updateStatus('server', 'connecting', 'Testing connection...');
+                log('🔗 Testing server connection...', 'info');
+
+                const response = await fetch('http://localhost:3030/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('server', 'online', `Connected (${data.status})`);
+                    updateStatus('ai', 'online', `OpenRouter: ${data.features.openRouterEnabled ? '✅' : '❌'}`);
+                    log('✅ Server connected successfully', 'success');
+                } else {
+                    updateStatus('server', 'offline', `Error: ${response.status}`);
+                    log(`❌ Server error: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('server', 'offline', 'Connection failed');
+                log(`❌ Server connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Load Gon's greeting
+        async function loadGonGreeting() {
+            try {
+                log('🎭 Loading Gon greeting...', 'info');
+                const response = await fetch('http://localhost:3030/persona/info');
+                if (response.ok) {
+                    const data = await response.json();
+                    addGonResponse(data.initialGreeting);
+                    log('✅ Gon greeting loaded', 'success');
+                }
+            } catch (error) {
+                log(`❌ Failed to load Gon greeting: ${error.message}`, 'error');
+            }
+        }
+
+        // Start voice capture
+        async function startVoiceCapture() {
+            try {
+                log('🎤 Starting voice capture...', 'info');
+                updateStatus('mic', 'connecting', 'Requesting microphone...');
+
+                // Request microphone access
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                // Setup audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(mediaStream);
+
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                microphone.connect(analyser);
+
+                // Setup audio processing
+                scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+                scriptProcessor.onaudioprocess = function(event) {
+                    const inputBuffer = event.inputBuffer;
+                    const inputData = inputBuffer.getChannelData(0);
+
+                    // Calculate RMS for audio level
+                    let rms = 0;
+                    for (let i = 0; i < inputData.length; i++) {
+                        rms += inputData[i] * inputData[i];
+                    }
+                    rms = Math.sqrt(rms / inputData.length);
+                    const level = Math.min(100, rms * 1000);
+
+                    metrics.audioLevel = level;
+                    updateMetrics();
+                    updateAudioVisualizer(level);
+                };
+
+                microphone.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+
+                // Setup speech recognition
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'pt-BR';
+
+                    recognition.onstart = function() {
+                        isRecording = true;
+                        updateStatus('mic', 'online', 'Listening...');
+                        document.getElementById('startBtn').disabled = true;
+                        document.getElementById('stopBtn').disabled = false;
+                        log('🎤 Voice capture started', 'success');
+                    };
+
+                    recognition.onresult = function(event) {
+                        let interimTranscript = '';
+                        let finalTranscript = '';
+
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+
+                        if (finalTranscript) {
+                            addUserMessage(finalTranscript);
+                            sendToGon(finalTranscript);
+                        }
+                    };
+
+                    recognition.onerror = function(event) {
+                        log(`❌ Speech recognition error: ${event.error}`, 'error');
+                        updateStatus('mic', 'offline', 'Error occurred');
+                    };
+
+                    recognition.onend = function() {
+                        if (isRecording) {
+                            recognition.start();
+                        }
+                    };
+
+                    recognition.start();
+                } else {
+                    throw new Error('Speech recognition not supported');
+                }
+
+            } catch (error) {
+                log(`❌ Failed to start voice capture: ${error.message}`, 'error');
+                updateStatus('mic', 'offline', 'Failed to start');
+            }
+        }
+
+        // Stop voice capture
+        function stopVoiceCapture() {
+            isRecording = false;
+
+            if (recognition) {
+                recognition.stop();
+            }
+
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+            }
+
+            if (scriptProcessor) {
+                scriptProcessor.disconnect();
+            }
+
+            if (microphone) {
+                microphone.disconnect();
+            }
+
+            if (audioContext) {
+                audioContext.close();
+            }
+
+            updateStatus('mic', 'offline', 'Stopped');
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            log('⏹️ Voice capture stopped', 'info');
+        }
+
+        // Add user message to conversation
+        function addUserMessage(message) {
+            const conversation = document.getElementById('conversation');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-user';
+            messageDiv.innerHTML = `
+                <div>${message}</div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        // Add Gon response to conversation
+        function addGonResponse(response) {
+            const gonResponses = document.getElementById('gon-responses');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message message-gon';
+            messageDiv.innerHTML = `
+                <div>${response}</div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            gonResponses.appendChild(messageDiv);
+            gonResponses.scrollTop = gonResponses.scrollHeight;
+        }
+
+        // Send message to Gon
+        async function sendToGon(message) {
+            try {
+                metrics.totalRequests++;
+                updateMetrics();
+
+                const startTime = Date.now();
+                log(`🧠 Sending to Gon: "${message}"`, 'info');
+
+                const response = await fetch('http://localhost:3030/llm/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message }),
+                });
+
+                const endTime = Date.now();
+                metrics.responseTime = endTime - startTime;
+                updateMetrics();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addGonResponse(data.response.response);
+                    log(`✅ Gon responded in ${metrics.responseTime}ms`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Gon error: ${response.status} - ${errorText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Failed to send to Gon: ${error.message}`, 'error');
+            }
+        }
+
+        // Test Gon response
+        async function testGonResponse() {
+            const testMessage = "Oi Gon! Como você está? Conte uma piada!";
+            addUserMessage(testMessage);
+            await sendToGon(testMessage);
+        }
+
+        // Clear conversation
+        function clearConversation() {
+            document.getElementById('conversation').innerHTML = '';
+            document.getElementById('gon-responses').innerHTML = '';
+            log('🗑️ Conversation cleared', 'info');
+        }
+
+        // Toggle auto start
+        function toggleAutoStart() {
+            autoStart = !autoStart;
+            log(`🔄 Auto start ${autoStart ? 'enabled' : 'disabled'}`, 'info');
+        }
+
+        // Clear cache
+        async function clearCache() {
+            try {
+                const response = await fetch('http://localhost:3030/cache/clear', {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    log('🗑️ Cache cleared', 'success');
+                } else {
+                    log('❌ Failed to clear cache', 'error');
+                }
+            } catch (error) {
+                log(`❌ Cache clear error: ${error.message}`, 'error');
+            }
+        }
+
+        // Export logs
+        function exportLogs() {
+            const logs = document.getElementById('logs').innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gon-voice-logs-${new Date().toISOString().slice(0, 19)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            log('📤 Logs exported', 'success');
+        }
+
+        // Update status indicators
+        function updateStatus(type, status, text) {
+            const statusElement = document.getElementById(`${type}-status`);
+            const textElement = document.getElementById(`${type}-text`);
+
+            // Remove all status classes
+            statusElement.querySelector('.status-indicator').className = 'status-indicator';
+
+            // Add new status class
+            statusElement.querySelector('.status-indicator').classList.add(`status-${status}`);
+            textElement.textContent = text;
+        }
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function() {
+            if (isRecording) {
+                stopVoiceCapture();
+            }
+        });
+    </script>
+</body>
+</html>
