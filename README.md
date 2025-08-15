@@ -21,7 +21,7 @@ graph TB
         B --> C[Speech Recognition]
         C --> D[Voice Activity Detection]
     end
-    
+
     subgraph "🌐 Voice Server"
         E[Fastify API] --> F[LLM Manager]
         F --> G[OpenRouter Engine]
@@ -30,19 +30,19 @@ graph TB
         E --> J[TTS Engine]
         E --> K[Cache Service]
     end
-    
+
     subgraph "🧠 AI Layer"
         G --> L[meta-llama/llama-3.2-3b-instruct]
         G --> M[Other Free Models]
         H --> N[Gon Persona]
     end
-    
+
     subgraph "💾 Infrastructure"
         K --> O[Redis Cache]
         E --> P[Prometheus Metrics]
         E --> Q[Structured Logging]
     end
-    
+
     A --> E
     I --> A
     J --> A

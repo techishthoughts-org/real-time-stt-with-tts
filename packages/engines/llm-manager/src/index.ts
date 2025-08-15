@@ -230,10 +230,9 @@ Guidelines for voice responses:
       { role: 'user', content: userQuestion },
     ];
 
+    // Use fastest model for personal assistant
     const response = await this.generateResponse(messages, {
-      preferredSource: 'auto',
-      maxLatency: 8000, // 8s max for voice interaction
-      streaming: false,
+      preferredSource: 'cloud', // Always use cloud for speed
     });
 
     // Log for personal assistant usage
@@ -243,6 +242,7 @@ Guidelines for voice responses:
       latency: response.latency,
       fallback: response.fallbackUsed,
       preview: response.content.substring(0, 50),
+      optimized: true,
     });
 
     return response.content;
@@ -251,13 +251,9 @@ Guidelines for voice responses:
   // Streaming response for real-time conversation
   async streamResponse(
     messages: AgentMessage[],
-    onChunk: (chunk: string, source: 'local' | 'cloud') => void,
-    options: { preferredSource?: 'local' | 'cloud' | 'auto' } = {}
+    onChunk: (chunk: string, source: 'local' | 'cloud') => void
   ): Promise<LLMResponse> {
     const startTime = Date.now();
-    const { preferredSource = 'auto' } = options;
-
-    const useLocal = this.shouldUseLocal(preferredSource);
     let content = '';
     let source: 'local' | 'cloud';
     let model: string;

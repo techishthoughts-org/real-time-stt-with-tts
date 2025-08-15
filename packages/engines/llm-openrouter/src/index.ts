@@ -262,13 +262,20 @@ export class OpenRouterEngine {
       // Get model config
       const modelConfig = this.getModelConfig(model);
 
+      // Optimize prompt for faster responses
+      const optimizedMessages = this.optimizePrompt(messages);
+
       // Prepare request
       const request = OpenRouterRequest.parse({
         model: modelConfig.id,
-        messages,
+        messages: optimizedMessages,
         max_tokens: this.config.maxTokens,
         temperature: this.config.temperature,
         stream: false,
+        // Performance optimizations
+        presence_penalty: 0.1, // Reduce repetition
+        frequency_penalty: 0.1, // Reduce repetition
+        top_p: 0.9, // Focus on most likely tokens
       });
 
       // Use circuit breaker for API call
@@ -485,5 +492,28 @@ Guidelines:
       return PaidModels[model as PaidModelKey];
     }
     throw new Error(`Unknown model: ${model}`);
+  }
+
+  // Optimize prompt for faster responses
+  private optimizePrompt(messages: AgentMessage[]): AgentMessage[] {
+    return messages.map(msg => {
+      if (msg.role === 'system') {
+        // Optimize system prompt for speed
+        return {
+          ...msg,
+          content: this.optimizeSystemPrompt(msg.content),
+        };
+      }
+      return msg;
+    });
+  }
+
+  // Optimize system prompt for faster processing
+  private optimizeSystemPrompt(content: string): string {
+    // Remove unnecessary whitespace and optimize for speed
+    return content
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/\n\s*\n/g, '\n') // Remove empty lines
+      .trim();
   }
 }
