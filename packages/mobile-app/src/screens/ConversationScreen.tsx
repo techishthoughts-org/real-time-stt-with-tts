@@ -11,9 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useVoiceAssistant } from '../contexts/VoiceAssistantContext';
+import { useAppStore } from '../store';
 
 const ConversationScreen: React.FC = () => {
   const { state, speak } = useVoiceAssistant();
+  const { clearConversations } = useAppStore();
 
   const renderMessage = ({ item }: { item: any }) => (
     <View style={styles.messageContainer}>
@@ -31,7 +33,7 @@ const ConversationScreen: React.FC = () => {
       {/* Assistant Message */}
       <View style={styles.assistantMessage}>
         <View style={styles.messageHeader}>
-          <MaterialIcons name="smart-toy" size={16} color="#4ECDC4" />
+          <MaterialIcons name="android" size={16} color="#4ECDC4" />
           <Text style={styles.messageTime}>
             {new Date(item.timestamp).toLocaleTimeString()}
           </Text>
@@ -70,7 +72,9 @@ const ConversationScreen: React.FC = () => {
               'Are you sure you want to clear all conversation history?',
               [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Clear', style: 'destructive', onPress: () => {} },
+                { text: 'Clear', style: 'destructive', onPress: () => {
+                  clearConversations();
+                }},
               ]
             );
           }}

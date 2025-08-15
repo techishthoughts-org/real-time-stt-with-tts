@@ -1,91 +1,125 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import {
+  Paper,
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  Chip,
+} from '@mui/material';
+import {
+  GetApp,
+  Close,
+  PhoneAndroid,
+  Computer,
+} from '@mui/icons-material';
 
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
+interface PWAInstallPromptProps {
+  onInstall: () => void;
+  onDismiss?: () => void;
 }
 
-export const PWAInstallPrompt: React.FC = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowInstallPrompt(true);
-    };
-
-    const handleAppInstalled = () => {
-      setShowInstallPrompt(false);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
-    }
-
-    setDeferredPrompt(null);
-    setShowInstallPrompt(false);
-  };
-
-  const handleDismiss = () => {
-    setShowInstallPrompt(false);
-    setDeferredPrompt(null);
-  };
-
-  if (!showInstallPrompt) return null;
-
+const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
+  onInstall,
+  onDismiss,
+}) => {
   return (
-    <div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-900">Install Gon Voice Assistant</h3>
-            <p className="text-xs text-gray-500">Add to home screen for quick access</p>
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={handleDismiss}
-            className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1"
+    <Paper
+      elevation={8}
+      sx={{
+        position: 'fixed',
+        bottom: 16,
+        left: 16,
+        right: 16,
+        maxWidth: 400,
+        mx: 'auto',
+        p: 3,
+        borderRadius: 3,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        zIndex: 1000,
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+        <Box sx={{ flex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <GetApp sx={{ fontSize: 20 }} />
+            <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+              Install Gon Voice Assistant
+            </Typography>
+          </Box>
+          
+          <Typography variant="body2" sx={{ mb: 2, opacity: 0.9 }}>
+            Get the full app experience with offline access and faster loading
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <Chip
+              icon={<PhoneAndroid />}
+              label="Mobile App"
+              size="small"
+              sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+            />
+            <Chip
+              icon={<Computer />}
+              label="Desktop App"
+              size="small"
+              sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+            />
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="contained"
+              onClick={onInstall}
+              startIcon={<GetApp />}
+              sx={{
+                backgroundColor: 'white',
+                color: 'primary.main',
+                '&:hover': {
+                  backgroundColor: 'grey.100',
+                },
+                textTransform: 'none',
+                fontWeight: 600,
+              }}
+            >
+              Install App
+            </Button>
+            
+            {onDismiss && (
+              <Button
+                variant="text"
+                onClick={onDismiss}
+                sx={{
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  },
+                  textTransform: 'none',
+                }}
+              >
+                Maybe Later
+              </Button>
+            )}
+          </Box>
+        </Box>
+        
+        {onDismiss && (
+          <IconButton
+            onClick={onDismiss}
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.1)',
+              },
+            }}
           >
-            Not now
-          </button>
-          <button
-            onClick={handleInstallClick}
-            className="bg-indigo-500 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-600 transition-colors"
-          >
-            Install
-          </button>
-        </div>
-      </div>
-    </div>
+            <Close />
+          </IconButton>
+        )}
+      </Box>
+    </Paper>
   );
 };
+
+export default PWAInstallPrompt;
