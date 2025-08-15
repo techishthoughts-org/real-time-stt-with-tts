@@ -1,15 +1,15 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Switch,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { usePermissions } from '../contexts/PermissionsContext';
 
@@ -51,7 +51,7 @@ const SettingsScreen: React.FC = () => {
   ) => (
     <View style={styles.settingItem}>
       <View style={styles.settingLeft}>
-        <Icon name={icon} size={24} color="#667eea" style={styles.settingIcon} />
+        <MaterialIcons name={icon} size={24} color="#667eea" style={styles.settingIcon} />
         <View style={styles.settingText}>
           <Text style={styles.settingTitle}>{title}</Text>
           <Text style={styles.settingSubtitle}>{subtitle}</Text>
@@ -73,14 +73,14 @@ const SettingsScreen: React.FC = () => {
       onPress={onRequest}
     >
       <View style={styles.settingLeft}>
-        <Icon name={icon} size={24} color={permission ? '#2ECC71' : '#E74C3C'} style={styles.settingIcon} />
+        <MaterialIcons name={icon} size={24} color={permission ? '#2ECC71' : '#E74C3C'} style={styles.settingIcon} />
         <View style={styles.settingText}>
           <Text style={styles.settingTitle}>{title}</Text>
           <Text style={styles.settingSubtitle}>{subtitle}</Text>
         </View>
       </View>
       <View style={[styles.permissionIndicator, { backgroundColor: permission ? '#2ECC71' : '#E74C3C' }]}>
-        <Icon name={permission ? 'check' : 'close'} size={16} color="#FFFFFF" />
+        <MaterialIcons name={permission ? 'check' : 'close'} size={16} color="#FFFFFF" />
       </View>
     </TouchableOpacity>
   );
@@ -155,35 +155,35 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>About</Text>
           <TouchableOpacity style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <Icon name="info" size={24} color="#667eea" style={styles.settingIcon} />
+              <MaterialIcons name="info" size={24} color="#667eea" style={styles.settingIcon} />
               <View style={styles.settingText}>
                 <Text style={styles.settingTitle}>Version</Text>
                 <Text style={styles.settingSubtitle}>1.0.0</Text>
               </View>
             </View>
-            <Icon name="chevron-right" size={24} color="#95A5A6" />
+            <MaterialIcons name="chevron-right" size={24} color="#95A5A6" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <Icon name="help" size={24} color="#667eea" style={styles.settingIcon} />
+              <MaterialIcons name="help" size={24} color="#667eea" style={styles.settingIcon} />
               <View style={styles.settingText}>
                 <Text style={styles.settingTitle}>Help & Support</Text>
                 <Text style={styles.settingSubtitle}>Get help and contact support</Text>
               </View>
             </View>
-            <Icon name="chevron-right" size={24} color="#95A5A6" />
+            <MaterialIcons name="chevron-right" size={24} color="#95A5A6" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <Icon name="privacy-tip" size={24} color="#667eea" style={styles.settingIcon} />
+              <MaterialIcons name="privacy-tip" size={24} color="#667eea" style={styles.settingIcon} />
               <View style={styles.settingText}>
                 <Text style={styles.settingTitle}>Privacy Policy</Text>
                 <Text style={styles.settingSubtitle}>Read our privacy policy</Text>
               </View>
             </View>
-            <Icon name="chevron-right" size={24} color="#95A5A6" />
+            <MaterialIcons name="chevron-right" size={24} color="#95A5A6" />
           </TouchableOpacity>
         </View>
 
@@ -202,7 +202,7 @@ const SettingsScreen: React.FC = () => {
               );
             }}
           >
-            <Icon name="refresh" size={20} color="#E74C3C" />
+            <MaterialIcons name="refresh" size={20} color="#E74C3C" />
             <Text style={styles.resetButtonText}>Reset App</Text>
           </TouchableOpacity>
         </View>

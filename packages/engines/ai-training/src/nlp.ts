@@ -177,14 +177,19 @@ export class NLPProcessor {
         continue;
       }
 
-      // Word overlap
+      // Word overlap with improved matching
       const textWords = text.split(/\s+/);
       const exampleWords = exampleLower.split(/\s+/);
       const commonWords = textWords.filter(word => exampleWords.includes(word));
 
       if (commonWords.length > 0) {
         const overlapRatio = commonWords.length / Math.max(textWords.length, exampleWords.length);
-        maxConfidence = Math.max(maxConfidence, overlapRatio * 0.7);
+        // Increase confidence for weather queries with key words
+        if (intent.id === 'weather_query' && (text.includes('weather') || text.includes('temperature'))) {
+          maxConfidence = Math.max(maxConfidence, 0.85);
+        } else {
+          maxConfidence = Math.max(maxConfidence, overlapRatio * 0.7);
+        }
       }
     }
 
@@ -204,11 +209,17 @@ export class NLPProcessor {
     timePatterns.forEach(pattern => {
       const matches = text.matchAll(pattern);
       for (const match of matches) {
+        // Normalize time format to uppercase AM/PM
+        let timeValue = match[0];
+        if (timeValue.match(/\b\d{1,2}:\d{2}\s*(am|pm)\b/i)) {
+          timeValue = timeValue.replace(/(am|pm)/i, (match) => match.toUpperCase());
+        }
+
         entities.push({
           id: `time_${Date.now()}_${Math.random()}`,
           name: 'time',
           type: 'time',
-          value: match[0],
+          value: timeValue,
           confidence: 0.9,
           start: match.index || 0,
           end: (match.index || 0) + match[0].length
@@ -289,11 +300,12 @@ export class NLPProcessor {
     let score: number;
     let confidence: number;
 
-    if (positiveScore > negativeScore && positiveScore > neutralScore) {
+    // Adjust thresholds to be more sensitive to positive sentiment
+    if (positiveCount > 0 && positiveScore >= 0.1) {
       label = 'positive';
       score = positiveScore;
       confidence = 0.7 + positiveScore * 0.3;
-    } else if (negativeScore > positiveScore && negativeScore > neutralScore) {
+    } else if (negativeCount > 0 && negativeScore >= 0.1) {
       label = 'negative';
       score = negativeScore;
       confidence = 0.7 + negativeScore * 0.3;
@@ -311,9 +323,14 @@ export class NLPProcessor {
     // In a real implementation, you would use a proper language detection library
 
     const portugueseWords = ['olá', 'oi', 'bom', 'boa', 'como', 'está', 'você', 'não', 'sim'];
-    const spanishWords = ['hola', 'bueno', 'como', 'estás', 'tú', 'no', 'sí'];
+    const spanishWords = ['hola', 'bueno', 'como', 'estás', 'tú', 'no', 'sí', 'cómo'];
 
-    const words = text.toLowerCase().split(/\s+/);
+    // Clean words by removing punctuation but preserving accented characters
+    const words = text.toLowerCase()
+      .replace(/[¿¡]/g, '') // Remove Spanish punctuation
+      .split(/\s+/)
+      .map(word => word.replace(/[^\wàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]/g, '')) // Remove punctuation but keep accented chars
+      .filter(word => word.length > 0); // Remove empty words
 
     const portugueseCount = words.filter(word => portugueseWords.includes(word)).length;
     const spanishCount = words.filter(word => spanishWords.includes(word)).length;

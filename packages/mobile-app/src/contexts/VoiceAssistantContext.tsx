@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import Tts from 'react-native-tts';
-import Voice from 'react-native-voice';
+import Voice from '@react-native-community/voice';
 
 interface VoiceAssistantState {
   isListening: boolean;

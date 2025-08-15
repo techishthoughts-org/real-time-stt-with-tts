@@ -180,7 +180,7 @@ export class TrainingPipeline {
       throw new Error(`Training job ${jobId} not found`);
     }
 
-    if (job.status === 'running') {
+    if (job.status === 'running' || job.status === 'pending') {
       job.status = 'cancelled';
       job.endTime = new Date();
       job.logs.push(`[${new Date().toISOString()}] Training cancelled`);

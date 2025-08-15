@@ -1,20 +1,20 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
-  Dimensions,
+    Alert,
+    Dimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useVoiceAssistant } from '../contexts/VoiceAssistantContext';
 import { usePermissions } from '../contexts/PermissionsContext';
+import { useVoiceAssistant } from '../contexts/VoiceAssistantContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -87,7 +87,7 @@ const HomeScreen: React.FC = () => {
             onPress={handleVoiceButtonPress}
             disabled={!state.isConnected}
           >
-            <Icon
+            <MaterialIcons
               name={state.isListening ? 'mic' : 'mic-none'}
               size={48}
               color="#FFFFFF"
@@ -116,7 +116,7 @@ const HomeScreen: React.FC = () => {
               style={styles.actionButton}
               onPress={() => navigation.navigate('Conversation' as never)}
             >
-              <Icon name="chat" size={24} color="#667eea" />
+              <MaterialIcons name="chat" size={24} color="#667eea" />
               <Text style={styles.actionText}>Conversation</Text>
             </TouchableOpacity>
 
@@ -124,14 +124,14 @@ const HomeScreen: React.FC = () => {
               style={styles.actionButton}
               onPress={() => navigation.navigate('Settings' as never)}
             >
-              <Icon name="settings" size={24} color="#667eea" />
+              <MaterialIcons name="settings" size={24} color="#667eea" />
               <Text style={styles.actionText}>Settings</Text>
             </TouchableOpacity>
           </View>
 
           {/* Connection Status */}
           <View style={styles.connectionStatus}>
-            <Icon
+            <MaterialIcons
               name={state.isConnected ? 'wifi' : 'wifi-off'}
               size={16}
               color={state.isConnected ? '#2ECC71' : '#E74C3C'}

@@ -1,0 +1,7 @@
+// Mock React Native polyfills
+module.exports = {
+  ErrorUtils: {
+    setGlobalHandler: jest.fn(),
+    getGlobalHandler: jest.fn(),
+  },
+};

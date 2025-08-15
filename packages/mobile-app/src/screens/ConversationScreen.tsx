@@ -1,26 +1,26 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Alert,
+    Alert,
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { useVoiceAssistant } from '../contexts/VoiceAssistantContext';
 
 const ConversationScreen: React.FC = () => {
-  const { state, speak, stopSpeaking } = useVoiceAssistant();
+  const { state, speak } = useVoiceAssistant();
 
   const renderMessage = ({ item }: { item: any }) => (
     <View style={styles.messageContainer}>
       {/* User Message */}
       <View style={styles.userMessage}>
         <View style={styles.messageHeader}>
-          <Icon name="person" size={16} color="#667eea" />
+          <MaterialIcons name="person" size={16} color="#667eea" />
           <Text style={styles.messageTime}>
             {new Date(item.timestamp).toLocaleTimeString()}
           </Text>
@@ -31,7 +31,7 @@ const ConversationScreen: React.FC = () => {
       {/* Assistant Message */}
       <View style={styles.assistantMessage}>
         <View style={styles.messageHeader}>
-          <Icon name="smart-toy" size={16} color="#4ECDC4" />
+          <MaterialIcons name="smart-toy" size={16} color="#4ECDC4" />
           <Text style={styles.messageTime}>
             {new Date(item.timestamp).toLocaleTimeString()}
           </Text>
@@ -41,7 +41,7 @@ const ConversationScreen: React.FC = () => {
           style={styles.playButton}
           onPress={() => speak(item.assistantResponse)}
         >
-          <Icon name="play-arrow" size={20} color="#4ECDC4" />
+          <MaterialIcons name="play-arrow" size={20} color="#4ECDC4" />
           <Text style={styles.playButtonText}>Play</Text>
         </TouchableOpacity>
       </View>
@@ -50,7 +50,7 @@ const ConversationScreen: React.FC = () => {
 
   const EmptyState = () => (
     <View style={styles.emptyState}>
-      <Icon name="chat" size={64} color="#95A5A6" />
+      <MaterialIcons name="chat" size={64} color="#95A5A6" />
       <Text style={styles.emptyStateTitle}>No conversations yet</Text>
       <Text style={styles.emptyStateSubtitle}>
         Start talking to Gon to see your conversation history here
@@ -75,7 +75,7 @@ const ConversationScreen: React.FC = () => {
             );
           }}
         >
-          <Icon name="clear-all" size={24} color="#E74C3C" />
+          <MaterialIcons name="clear-all" size={24} color="#E74C3C" />
         </TouchableOpacity>
       </View>
 
