@@ -3,8 +3,11 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   setupFiles: ['<rootDir>/jest.setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+  },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@expo|react-native-.*|@react-native-community|@react-native-async-storage|@react-native-js-polyfills|@react-native\\+js-polyfills)/)',
+    'node_modules/(?!(react-native|@react-native|@react-navigation|@expo|react-native-.*|@react-native-community|@react-native-async-storage|@react-native-js-polyfills|@react-native\\+js-polyfills|@react-native/js-polyfills)/)',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -13,6 +16,8 @@ module.exports = {
     '^@voice/schemas$': '<rootDir>/../shared/schemas/src',
     '@react-native/js-polyfills': '<rootDir>/src/__mocks__/react-native-polyfills.js',
     '@react-native\\+js-polyfills': '<rootDir>/src/__mocks__/react-native-polyfills.js',
+    '@react-native/js-polyfills/error-guard': '<rootDir>/src/__mocks__/react-native-polyfills.js',
+    '^react-native$': 'react-native-web',
   },
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.(ts|tsx|js)', '**/*.(test|spec).(ts|tsx|js)'],
@@ -27,6 +32,11 @@ module.exports = {
       functions: 70,
       lines: 70,
       statements: 70,
+    },
+  },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
     },
   },
 };
