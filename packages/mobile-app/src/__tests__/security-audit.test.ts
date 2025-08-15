@@ -1,200 +1,320 @@
-import { securityAuditService } from '../services/security-audit';
+import { securityService } from '../services/security';
 
-// Mock DeviceInfo
-jest.mock('react-native-device-info', () => ({
-  isEmulator: jest.fn(),
-  isRooted: jest.fn(),
-  isTablet: jest.fn(),
-  getBrand: jest.fn(),
-  getSystemVersion: jest.fn(),
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  setItem: jest.fn(),
+  getItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
 }));
 
-// Mock logger
-jest.mock('@voice/observability', () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-  },
+// Mock react-native-keychain
+jest.mock('react-native-keychain', () => ({
+  setInternetCredentials: jest.fn(),
+  getInternetCredentials: jest.fn(),
+  resetInternetCredentials: jest.fn(),
+  canImplyAuthentication: jest.fn(),
+  getSupportedBiometryType: jest.fn(),
 }));
 
-describe('SecurityAuditService', () => {
+describe('Security Audit Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('performSecurityAudit', () => {
-    it('should perform comprehensive security audit successfully', async () => {
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result).toBeDefined();
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(100);
-      expect(['A', 'B', 'C', 'D', 'F']).toContain(result.grade);
-      expect(Array.isArray(result.issues)).toBe(true);
-      expect(Array.isArray(result.recommendations)).toBe(true);
-      expect(result.timestamp).toBeInstanceOf(Date);
+  describe('Token Security', () => {
+    it('should store tokens securely', async () => {
+      const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.token';
+      
+      await securityService.setSecureData('sessionToken', testToken);
+      
+      expect(securityService.setSecureData).toHaveBeenCalledWith('sessionToken', testToken);
     });
 
-    it('should return grade A for high security score', async () => {
-      // Mock all security checks to pass
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockResolvedValue(false);
-      mockDeviceInfo.isRooted.mockResolvedValue(false);
-      mockDeviceInfo.getBrand.mockResolvedValue('Apple');
-      mockDeviceInfo.getSystemVersion.mockResolvedValue('15.0');
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.grade).toBe('A');
-      expect(result.score).toBeGreaterThanOrEqual(90);
+    it('should retrieve tokens securely', async () => {
+      const testToken = 'secure-token-123';
+      
+      (securityService.getSecureData as jest.Mock).mockResolvedValue(testToken);
+      
+      const retrievedToken = await securityService.getSecureData('sessionToken');
+      
+      expect(retrievedToken).toBe(testToken);
     });
 
-    it('should return grade F for critical security issues', async () => {
-      // Mock critical security issues
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockResolvedValue(false);
-      mockDeviceInfo.isRooted.mockResolvedValue(true); // Critical issue
-      mockDeviceInfo.getBrand.mockResolvedValue('Apple');
-      mockDeviceInfo.getSystemVersion.mockResolvedValue('15.0');
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.grade).toBe('F');
-      expect(result.score).toBeLessThan(60);
-      expect(result.issues.some(issue => issue.severity === 'critical')).toBe(true);
+    it('should handle token expiration', async () => {
+      const expiredToken = 'expired.token.here';
+      
+      // Mock token validation
+      const isValidToken = securityService.validateToken(expiredToken);
+      
+      expect(isValidToken).toBe(false);
     });
 
-    it('should handle emulator detection', async () => {
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockResolvedValue(true);
-      mockDeviceInfo.isRooted.mockResolvedValue(false);
-      mockDeviceInfo.getBrand.mockResolvedValue('Apple');
-      mockDeviceInfo.getSystemVersion.mockResolvedValue('15.0');
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.issues.some(issue => 
-        issue.title === 'Emulator Detection' && 
-        issue.severity === 'medium'
-      )).toBe(true);
-    });
-
-    it('should handle outdated system version', async () => {
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockResolvedValue(false);
-      mockDeviceInfo.isRooted.mockResolvedValue(false);
-      mockDeviceInfo.getBrand.mockResolvedValue('Apple');
-      mockDeviceInfo.getSystemVersion.mockResolvedValue('12.0'); // Outdated
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.issues.some(issue => 
-        issue.title === 'Outdated System' && 
-        issue.severity === 'high'
-      )).toBe(true);
-    });
-
-    it('should handle unknown device brand', async () => {
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockResolvedValue(false);
-      mockDeviceInfo.isRooted.mockResolvedValue(false);
-      mockDeviceInfo.getBrand.mockResolvedValue('unknown');
-      mockDeviceInfo.getSystemVersion.mockResolvedValue('15.0');
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.issues.some(issue => 
-        issue.title === 'Unknown Device Brand' && 
-        issue.severity === 'medium'
-      )).toBe(true);
-    });
-
-    it('should generate appropriate recommendations', async () => {
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.recommendations.length).toBeGreaterThan(0);
-      expect(result.recommendations.length).toBeLessThanOrEqual(10);
-      expect(result.recommendations).toContain('Keep device and app updated');
-      expect(result.recommendations).toContain('Use strong, unique passwords');
-    });
-
-    it('should handle audit failure gracefully', async () => {
-      // Mock DeviceInfo to throw error
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockRejectedValue(new Error('Device check failed'));
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.score).toBe(0);
-      expect(result.grade).toBe('F');
-      expect(result.issues.some(issue => 
-        issue.title === 'Security Audit Failure' && 
-        issue.severity === 'critical'
-      )).toBe(true);
+    it('should clear tokens on logout', async () => {
+      await securityService.removeSecureData('sessionToken');
+      
+      expect(securityService.removeSecureData).toHaveBeenCalledWith('sessionToken');
     });
   });
 
-  describe('Security Issue Categories', () => {
-    it('should categorize issues correctly', async () => {
-      const result = await securityAuditService.performSecurityAudit();
+  describe('Data Encryption', () => {
+    it('should encrypt sensitive data', async () => {
+      const sensitiveData = {
+        userId: '12345',
+        email: 'user@example.com',
+        preferences: { theme: 'dark' }
+      };
+      
+      const encrypted = await securityService.encryptData(JSON.stringify(sensitiveData));
+      
+      expect(encrypted).not.toBe(JSON.stringify(sensitiveData));
+      expect(typeof encrypted).toBe('string');
+    });
 
-      const categories = result.issues.map(issue => issue.category);
-      const expectedCategories = ['device', 'network', 'storage', 'authentication', 'code'];
+    it('should decrypt data correctly', async () => {
+      const originalData = 'sensitive information';
+      const encrypted = await securityService.encryptData(originalData);
+      const decrypted = await securityService.decryptData(encrypted);
+      
+      expect(decrypted).toBe(originalData);
+    });
 
-      categories.forEach(category => {
-        expect(expectedCategories).toContain(category);
+    it('should handle encryption errors gracefully', async () => {
+      const invalidData = null;
+      
+      await expect(securityService.encryptData(invalidData as any)).rejects.toThrow();
+    });
+  });
+
+  describe('Biometric Authentication', () => {
+    it('should check biometric availability', async () => {
+      const isAvailable = await securityService.isBiometricAvailable();
+      
+      expect(typeof isAvailable).toBe('boolean');
+    });
+
+    it('should authenticate with biometrics', async () => {
+      const isAuthenticated = await securityService.authenticateWithBiometrics();
+      
+      expect(typeof isAuthenticated).toBe('boolean');
+    });
+
+    it('should handle biometric authentication failure', async () => {
+      // Mock biometric failure
+      (securityService.authenticateWithBiometrics as jest.Mock).mockRejectedValue(
+        new Error('Biometric authentication failed')
+      );
+      
+      await expect(securityService.authenticateWithBiometrics()).rejects.toThrow(
+        'Biometric authentication failed'
+      );
+    });
+  });
+
+  describe('Network Security', () => {
+    it('should validate SSL certificates', async () => {
+      const isValidSSL = await securityService.validateSSLCertificate('https://api.example.com');
+      
+      expect(typeof isValidSSL).toBe('boolean');
+    });
+
+    it('should handle insecure connections', async () => {
+      const isValidSSL = await securityService.validateSSLCertificate('http://insecure.example.com');
+      
+      expect(isValidSSL).toBe(false);
+    });
+
+    it('should validate API endpoints', async () => {
+      const validEndpoints = [
+        'https://api.example.com/health',
+        'https://api.example.com/auth',
+        'https://api.example.com/voice'
+      ];
+      
+      for (const endpoint of validEndpoints) {
+        const isValid = await securityService.validateEndpoint(endpoint);
+        expect(isValid).toBe(true);
+      }
+    });
+  });
+
+  describe('Input Validation', () => {
+    it('should sanitize user inputs', () => {
+      const maliciousInputs = [
+        '<script>alert("xss")</script>',
+        'SELECT * FROM users; DROP TABLE users;',
+        '../../../etc/passwd',
+        'javascript:alert("xss")'
+      ];
+      
+      for (const input of maliciousInputs) {
+        const sanitized = securityService.sanitizeInput(input);
+        expect(sanitized).not.toContain('<script>');
+        expect(sanitized).not.toContain('javascript:');
+        expect(sanitized).not.toContain('SELECT');
+        expect(sanitized).not.toContain('../');
+      }
+    });
+
+    it('should validate email format', () => {
+      const validEmails = [
+        'user@example.com',
+        'test.user+tag@domain.co.uk',
+        'user123@test-domain.org'
+      ];
+      
+      const invalidEmails = [
+        'invalid-email',
+        '@domain.com',
+        'user@',
+        'user..name@domain.com'
+      ];
+      
+      for (const email of validEmails) {
+        expect(securityService.validateEmail(email)).toBe(true);
+      }
+      
+      for (const email of invalidEmails) {
+        expect(securityService.validateEmail(email)).toBe(false);
+      }
+    });
+
+    it('should validate password strength', () => {
+      const strongPasswords = [
+        'MySecurePass123!',
+        'Complex@Password#2024',
+        'Str0ng!P@ssw0rd'
+      ];
+      
+      const weakPasswords = [
+        '123456',
+        'password',
+        'qwerty',
+        'abc123'
+      ];
+      
+      for (const password of strongPasswords) {
+        expect(securityService.validatePasswordStrength(password)).toBe(true);
+      }
+      
+      for (const password of weakPasswords) {
+        expect(securityService.validatePasswordStrength(password)).toBe(false);
+      }
+    });
+  });
+
+  describe('Session Management', () => {
+    it('should create secure sessions', async () => {
+      const session = await securityService.createSession({
+        userId: '12345',
+        email: 'user@example.com'
       });
+      
+      expect(session).toHaveProperty('id');
+      expect(session).toHaveProperty('token');
+      expect(session).toHaveProperty('expiresAt');
+      expect(session.expiresAt).toBeGreaterThan(Date.now());
     });
 
-    it('should have appropriate severity levels', async () => {
-      const result = await securityAuditService.performSecurityAudit();
-
-      const severities = result.issues.map(issue => issue.severity);
-      const expectedSeverities = ['critical', 'high', 'medium', 'low'];
-
-      severities.forEach(severity => {
-        expect(expectedSeverities).toContain(severity);
-      });
-    });
-  });
-
-  describe('Security Score Calculation', () => {
-    it('should calculate score correctly for different scenarios', async () => {
-      // Test with no issues
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockResolvedValue(false);
-      mockDeviceInfo.isRooted.mockResolvedValue(false);
-      mockDeviceInfo.getBrand.mockResolvedValue('Apple');
-      mockDeviceInfo.getSystemVersion.mockResolvedValue('15.0');
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.score).toBeGreaterThanOrEqual(80);
-      expect(['A', 'B']).toContain(result.grade);
+    it('should validate session tokens', async () => {
+      const validToken = 'valid.jwt.token';
+      const invalidToken = 'invalid.token';
+      
+      expect(await securityService.validateSession(validToken)).toBe(true);
+      expect(await securityService.validateSession(invalidToken)).toBe(false);
     });
 
-    it('should not allow negative scores', async () => {
-      // Mock many issues to potentially cause negative score
-      const mockDeviceInfo = require('react-native-device-info');
-      mockDeviceInfo.isEmulator.mockResolvedValue(true);
-      mockDeviceInfo.isRooted.mockResolvedValue(true);
-      mockDeviceInfo.getBrand.mockResolvedValue('unknown');
-      mockDeviceInfo.getSystemVersion.mockResolvedValue('10.0');
-
-      const result = await securityAuditService.performSecurityAudit();
-
-      expect(result.score).toBeGreaterThanOrEqual(0);
+    it('should handle session expiration', async () => {
+      const expiredSession = {
+        id: 'expired-session',
+        token: 'expired.token',
+        expiresAt: Date.now() - 1000 // Expired 1 second ago
+      };
+      
+      const isValid = await securityService.validateSession(expiredSession.token);
+      expect(isValid).toBe(false);
     });
   });
 
-  describe('Grade Calculation', () => {
-    it('should return correct grades for score ranges', async () => {
-      // This would require mocking the internal calculation
-      // For now, we test the public interface
-      const result = await securityAuditService.performSecurityAudit();
+  describe('Error Handling', () => {
+    it('should not expose sensitive information in errors', () => {
+      const sensitiveError = new Error('Database connection failed: password=secret123');
+      const sanitizedError = securityService.sanitizeError(sensitiveError);
+      
+      expect(sanitizedError.message).not.toContain('password=secret123');
+      expect(sanitizedError.message).toContain('Database connection failed');
+    });
 
-      expect(['A', 'B', 'C', 'D', 'F']).toContain(result.grade);
+    it('should log security events', () => {
+      const securityEvent = {
+        type: 'authentication_failure',
+        userId: '12345',
+        ipAddress: '192.168.1.1',
+        timestamp: new Date()
+      };
+      
+      securityService.logSecurityEvent(securityEvent);
+      
+      expect(securityService.logSecurityEvent).toHaveBeenCalledWith(securityEvent);
+    });
+  });
+
+  describe('Rate Limiting', () => {
+    it('should enforce rate limits', async () => {
+      const userId = '12345';
+      
+      // Simulate multiple rapid requests
+      for (let i = 0; i < 5; i++) {
+        const isAllowed = await securityService.checkRateLimit(userId, 'login');
+        if (i < 3) {
+          expect(isAllowed).toBe(true);
+        } else {
+          expect(isAllowed).toBe(false);
+        }
+      }
+    });
+
+    it('should reset rate limits after timeout', async () => {
+      const userId = '12345';
+      
+      // Exceed rate limit
+      for (let i = 0; i < 5; i++) {
+        await securityService.checkRateLimit(userId, 'login');
+      }
+      
+      // Wait for rate limit to reset (mock)
+      jest.advanceTimersByTime(15 * 60 * 1000); // 15 minutes
+      
+      const isAllowed = await securityService.checkRateLimit(userId, 'login');
+      expect(isAllowed).toBe(true);
+    });
+  });
+
+  describe('Data Privacy', () => {
+    it('should anonymize user data', () => {
+      const userData = {
+        id: '12345',
+        email: 'user@example.com',
+        name: 'John Doe',
+        phone: '+1234567890'
+      };
+      
+      const anonymized = securityService.anonymizeData(userData);
+      
+      expect(anonymized.id).not.toBe('12345');
+      expect(anonymized.email).not.toBe('user@example.com');
+      expect(anonymized.name).not.toBe('John Doe');
+      expect(anonymized.phone).not.toBe('+1234567890');
+    });
+
+    it('should handle data retention policies', async () => {
+      const oldData = {
+        id: 'old-data',
+        createdAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) // 1 year ago
+      };
+      
+      const shouldDelete = await securityService.shouldDeleteData(oldData);
+      expect(shouldDelete).toBe(true);
     });
   });
 });

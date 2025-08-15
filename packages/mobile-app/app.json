@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -16,17 +16,47 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gonvoice.assistant"
+      "bundleIdentifier": "com.gonvoice.assistant",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app needs access to microphone to record voice for voice assistant functionality.",
+        "NSSpeechRecognitionUsageDescription": "This app needs speech recognition to understand voice commands.",
+        "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#667eea"
       },
-      "package": "com.gonvoice.assistant"
+      "package": "com.gonvoice.assistant",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      "expo-router"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
     }
   }
 }

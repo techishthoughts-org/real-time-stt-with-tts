@@ -1,4 +1,6 @@
 
+import { app } from 'electron';
+
 class MemoryManager {
   private memoryThreshold = 500 * 1024 * 1024; // 500MB
   private checkInterval: NodeJS.Timeout | null = null;
@@ -16,8 +18,8 @@ class MemoryManager {
 
   private async checkMemoryUsage() {
     try {
-      const memoryInfo = await process.getProcessMemoryInfo();
-      const privateBytes = memoryInfo.privateBytes;
+      const memoryInfo = await app.getAppMetrics();
+      const privateBytes = memoryInfo[0]?.memory?.privateBytes || 0;
 
       console.log(`Memory usage: ${(privateBytes / 1024 / 1024).toFixed(2)} MB`);
 
@@ -42,8 +44,9 @@ class MemoryManager {
       this.clearCaches();
 
       // Log memory after cleanup
-      const memoryInfo = await process.getProcessMemoryInfo();
-      console.log(`Memory after cleanup: ${(memoryInfo.privateBytes / 1024 / 1024).toFixed(2)} MB`);
+      const memoryInfo = await app.getAppMetrics();
+      const privateBytes = memoryInfo[0]?.memory?.privateBytes || 0;
+      console.log(`Memory after cleanup: ${(privateBytes / 1024 / 1024).toFixed(2)} MB`);
     } catch (error) {
       console.error('Memory cleanup failed:', error);
     }
@@ -58,14 +61,15 @@ class MemoryManager {
   // Method to get current memory usage
   async getMemoryUsage() {
     try {
-      const memoryInfo = await process.getProcessMemoryInfo();
+      const memoryInfo = await app.getAppMetrics();
+      const memory = memoryInfo[0]?.memory;
       return {
-        privateBytes: memoryInfo.privateBytes,
-        sharedBytes: memoryInfo.sharedBytes,
-        peakWorkingSetSize: memoryInfo.peakWorkingSetSize,
-        privateBytesMB: (memoryInfo.privateBytes / 1024 / 1024).toFixed(2),
-        sharedBytesMB: (memoryInfo.sharedBytes / 1024 / 1024).toFixed(2),
-        peakWorkingSetSizeMB: (memoryInfo.peakWorkingSetSize / 1024 / 1024).toFixed(2)
+        privateBytes: memory?.privateBytes || 0,
+        sharedBytes: 0, // Not available in Electron's MemoryInfo
+        peakWorkingSetSize: memory?.peakWorkingSetSize || 0,
+        privateBytesMB: ((memory?.privateBytes || 0) / 1024 / 1024).toFixed(2),
+        sharedBytesMB: '0.00', // Not available in Electron's MemoryInfo
+        peakWorkingSetSizeMB: ((memory?.peakWorkingSetSize || 0) / 1024 / 1024).toFixed(2)
       };
     } catch (error) {
       console.error('Failed to get memory usage:', error);

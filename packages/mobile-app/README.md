@@ -1,129 +1,307 @@
 # Gon Voice Assistant Mobile App
 
-A React Native mobile application for the Gon Voice Assistant, providing voice interaction capabilities on iOS and Android devices.
+A React Native mobile application for the Gon Voice Assistant, featuring real-time speech recognition, text-to-speech, and AI-powered conversations. Built with Expo for cross-platform support (iOS, Android, and Web).
 
-## Features
+## 🚀 Features
 
-- **Voice Recognition**: Real-time speech-to-text using device microphone
-- **Text-to-Speech**: Natural voice responses from Gon
-- **Conversation History**: View and replay previous conversations
-- **Offline Mode**: Basic functionality when server is unavailable
-- **Push Notifications**: Receive voice assistant alerts
-- **Settings Management**: Configure app preferences and permissions
+- **Real-time Speech Recognition**: Convert speech to text using platform-native APIs
+- **Text-to-Speech**: Natural voice synthesis for AI responses
+- **Cross-platform Support**: iOS, Android, and Web platforms
+- **Voice Test Interface**: Comprehensive testing interface similar to test-voice.html
+- **Secure Authentication**: Biometric and token-based authentication
+- **Offline Support**: Basic functionality when offline
+- **Performance Monitoring**: Real-time metrics and logging
+- **E2E Testing**: Complete test suite with Playwright
 
-## Prerequisites
+## 📱 Supported Platforms
 
-- Node.js 16+
-- React Native CLI
-- Xcode (for iOS development)
+- **iOS**: Native iOS app with full voice capabilities
+- **Android**: Native Android app with full voice capabilities  
+- **Web**: Progressive Web App (PWA) with Web Speech API
+
+## 🛠️ Tech Stack
+
+- **Framework**: React Native 0.79.5 + Expo SDK 53
+- **Navigation**: React Navigation 6.x
+- **State Management**: Zustand
+- **Voice**: React Native Voice + Web Speech API
+- **Testing**: Jest + React Native Testing Library + Playwright
+- **Build**: Metro + Expo CLI
+- **Language**: TypeScript
+
+## 📋 Prerequisites
+
+- Node.js 18+ 
+- pnpm 8+
+- Expo CLI
+- iOS Simulator (for iOS development)
 - Android Studio (for Android development)
-- Gon Voice Assistant server running on localhost:3000
+- Chrome/Edge (for web development)
 
-## Installation
+## 🚀 Quick Start
 
-1. **Install dependencies**:
-   ```bash
-   cd packages/mobile-app
-   pnpm install
-   ```
+### 1. Install Dependencies
 
-2. **iOS Setup** (macOS only):
-   ```bash
-   cd ios
-   pod install
-   cd ..
-   ```
+```bash
+# Install workspace dependencies
+pnpm install
 
-3. **Start the Metro bundler**:
-   ```bash
-   pnpm start
-   ```
-
-4. **Run on device/simulator**:
-   ```bash
-   # iOS
-   pnpm ios
-
-   # Android
-   pnpm android
-   ```
-
-## Development
-
-### Project Structure
-
-```
-src/
-├── contexts/           # React Context providers
-│   ├── VoiceAssistantContext.tsx
-│   └── PermissionsContext.tsx
-├── screens/            # App screens
-│   ├── HomeScreen.tsx
-│   ├── ConversationScreen.tsx
-│   └── SettingsScreen.tsx
-└── components/         # Reusable components
+# Install mobile app dependencies
+cd packages/mobile-app
+pnpm install
 ```
 
-### Key Components
+### 2. Start Development Server
 
-- **VoiceAssistantContext**: Manages voice recognition, TTS, and server communication
-- **PermissionsContext**: Handles app permissions (microphone, notifications)
-- **HomeScreen**: Main voice interaction interface
-- **ConversationScreen**: Chat history and message playback
-- **SettingsScreen**: App configuration and permissions
+```bash
+# Start for iOS
+pnpm run ios
 
-### Configuration
+# Start for Android
+pnpm run android
 
-The app connects to the Gon Voice Assistant server running on `localhost:3000`. Update the server URL in `VoiceAssistantContext.tsx` for production deployment.
+# Start for Web
+pnpm run web
 
-## Building for Production
+# Start Expo development server
+pnpm start
+```
 
-### iOS
+### 3. Run Tests
 
-1. **Archive the app**:
-   ```bash
-   pnpm build:ios
-   ```
+```bash
+# Run unit tests
+pnpm test
 
-2. **Upload to App Store Connect** using Xcode
+# Run tests with coverage
+pnpm run test:coverage
 
-### Android
+# Run E2E tests
+pnpm run e2e:test
 
-1. **Build APK**:
-   ```bash
-   pnpm build:android
-   ```
+# Run E2E tests for web
+pnpm run e2e:test:web
+```
 
-2. **Upload to Google Play Console**
+## 🏗️ Project Structure
 
-## Permissions
+```
+packages/mobile-app/
+├── src/
+│   ├── components/          # Reusable UI components
+│   ├── contexts/           # React contexts (Voice, Permissions)
+│   ├── screens/            # App screens
+│   │   ├── HomeScreen.tsx
+│   │   ├── VoiceTestScreen.tsx  # Voice testing interface
+│   │   ├── ConversationScreen.tsx
+│   │   └── ...
+│   ├── services/           # Business logic services
+│   │   ├── platformVoiceService.ts  # Platform-specific voice
+│   │   ├── security.ts
+│   │   └── api.ts
+│   ├── store/              # State management
+│   └── types/              # TypeScript type definitions
+├── e2e/                    # End-to-end tests
+├── web/                    # Web-specific files
+├── assets/                 # App assets
+└── __tests__/              # Unit tests
+```
 
-The app requires the following permissions:
+## 🎤 Voice Features
 
-- **Microphone**: For voice recognition
-- **Notifications**: For push notifications
-- **Storage** (Android): For offline data storage
+### Platform-Specific Implementation
 
-## Troubleshooting
+The app uses different voice APIs based on the platform:
+
+- **iOS/Android**: React Native Voice + React Native TTS
+- **Web**: Web Speech API (SpeechRecognition + SpeechSynthesis)
+
+### Voice Test Interface
+
+Access the comprehensive voice testing interface by:
+1. Opening the app
+2. Tapping the "🧪 Voice Test Interface" button
+3. Using the interface to test:
+   - Server connectivity
+   - Microphone access
+   - Speech recognition
+   - Text-to-speech
+   - AI responses
+   - Performance metrics
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the mobile app directory:
+
+```env
+# API Configuration
+API_BASE_URL=http://localhost:3030
+API_TIMEOUT=30000
+
+# Voice Configuration
+VOICE_LANGUAGE=en-US
+VOICE_SPEED=1.0
+VOICE_PITCH=1.0
+
+# Security
+ENCRYPTION_KEY=your-encryption-key
+BIOMETRIC_ENABLED=true
+```
+
+### App Configuration
+
+Edit `app.json` to customize:
+- App name and version
+- Platform-specific settings
+- Permissions
+- Build configuration
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm run test:watch
+
+# Run tests with coverage
+pnpm run test:coverage
+```
+
+### E2E Tests
+
+```bash
+# Install E2E dependencies
+pnpm run e2e:install
+
+# Run E2E tests
+pnpm run e2e:test
+
+# Run E2E tests for specific platform
+pnpm run e2e:test:web
+pnpm run e2e:test:mobile
+```
+
+### Test Structure
+
+- **Unit Tests**: Jest + React Native Testing Library
+- **E2E Tests**: Playwright with multiple browser/device configurations
+- **Voice Tests**: Platform-specific voice functionality testing
+- **Security Tests**: Authentication and data protection testing
+
+## 🚀 Building for Production
+
+### Web Build
+
+```bash
+# Build for web
+pnpm run build:web
+
+# Serve web build
+pnpm run web:serve
+```
+
+### Mobile Builds
+
+```bash
+# Build for iOS
+pnpm run build:ios
+
+# Build for Android
+pnpm run build:android
+```
+
+## 🔒 Security Features
+
+- **Biometric Authentication**: Face ID / Touch ID / Fingerprint
+- **Secure Storage**: Encrypted local storage
+- **Token Management**: Secure session handling
+- **Network Security**: SSL pinning and certificate validation
+- **Input Validation**: XSS and injection protection
+
+## 📊 Performance Monitoring
+
+The app includes comprehensive performance monitoring:
+
+- **Response Time**: API call latency tracking
+- **Audio Level**: Real-time microphone input monitoring
+- **Cache Hits**: Performance optimization metrics
+- **Error Tracking**: Comprehensive error logging
+- **Memory Usage**: Memory leak detection
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Metro bundler issues**: Clear cache with `pnpm start --reset-cache`
-2. **iOS build errors**: Clean build folder in Xcode
-3. **Android build errors**: Clean project with `cd android && ./gradlew clean`
-4. **Permission denied**: Check device settings and app permissions
+1. **Metro Bundler Errors**
+   ```bash
+   # Clear Metro cache
+   npx expo start --clear
+   ```
 
-### Debug Mode
+2. **Voice Recognition Not Working**
+   - Check microphone permissions
+   - Ensure HTTPS on web (required for Speech API)
+   - Verify platform-specific voice libraries
 
-Enable debug logging by setting `__DEV__` to true in the app configuration.
+3. **Build Failures**
+   ```bash
+   # Clean and reinstall
+   pnpm run clean
+   pnpm install
+   ```
 
-## Contributing
+4. **Test Failures**
+   ```bash
+   # Clear Jest cache
+   npx jest --clearCache
+   ```
 
-1. Follow the existing code style and patterns
-2. Add TypeScript types for all new components
-3. Test on both iOS and Android devices
-4. Update documentation for new features
+### Platform-Specific Issues
 
-## License
+#### iOS
+- Ensure Xcode is up to date
+- Check iOS deployment target compatibility
+- Verify microphone permissions in Info.plist
 
-This project is part of the Gon Voice Assistant and follows the same license terms.
+#### Android
+- Ensure Android SDK is properly configured
+- Check Android permissions in AndroidManifest.xml
+- Verify Google Play Services availability
+
+#### Web
+- Use HTTPS for voice features (required by Web Speech API)
+- Check browser compatibility (Chrome, Safari, Edge)
+- Ensure microphone permissions are granted
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Run the test suite
+6. Submit a pull request
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the troubleshooting section
+- Review the E2E test examples for usage patterns
+
+## 🔄 Version History
+
+- **v1.0.0**: Initial release with basic voice functionality
+- **v1.1.0**: Added Voice Test Interface
+- **v1.2.0**: Enhanced E2E testing and performance monitoring
+- **v1.3.0**: Improved cross-platform compatibility and security features

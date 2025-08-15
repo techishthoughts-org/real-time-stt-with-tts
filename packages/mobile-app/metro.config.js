@@ -1,4 +1,5 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const path = require('path');
 
 /**
  * Metro configuration
@@ -9,12 +10,24 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const config = {
   resolver: {
     alias: {
-      '@': './src',
-      '@voice/config': '../shared/config/src',
-      '@voice/observability': '../shared/observability/src',
-      '@voice/schemas': '../shared/schemas/src',
+      '@': path.resolve(__dirname, './src'),
+      '@voice/config': path.resolve(__dirname, '../shared/config/src'),
+      '@voice/observability': path.resolve(__dirname, '../shared/observability/src'),
+      '@voice/schemas': path.resolve(__dirname, '../shared/schemas/src'),
     },
+    platforms: ['ios', 'android', 'native', 'web'],
   },
+  transformer: {
+    getTransformOptions: async () => ({
+      transform: {
+        experimentalImportSupport: false,
+        inlineRequires: true,
+      },
+    }),
+  },
+  watchFolders: [
+    path.resolve(__dirname, '../shared'),
+  ],
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);

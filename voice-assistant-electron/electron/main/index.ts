@@ -20,7 +20,7 @@ function createWindow(): void {
       sandbox: false,
       nodeIntegration: false,
       contextIsolation: true,
-      enableRemoteModule: false,
+      // enableRemoteModule: false, // Removed in newer Electron versions
       webSecurity: true
     },
     titleBarStyle: 'hiddenInset', // macOS native title bar
@@ -108,7 +108,7 @@ function createWindow(): void {
         ]
       }
     ];
-    const menu = Menu.buildFromTemplate(template);
+    const menu = Menu.buildFromTemplate(template as any);
     Menu.setApplicationMenu(menu);
   }
 }

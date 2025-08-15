@@ -106,7 +106,7 @@ const defaultPermissions = {
 };
 
 // Create store
-export const useAppStore = create<AppState>()(
+export const useAppStore = create<AppState>(
   persist(
     (set, get) => ({
       // Initial state

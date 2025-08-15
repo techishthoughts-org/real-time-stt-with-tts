@@ -21,6 +21,7 @@ import HomeScreen from './screens/HomeScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import LoginScreen from './screens/LoginScreen';
 import LoadingScreen from './screens/LoadingScreen';
+import { VoiceTestScreen } from './screens/VoiceTestScreen';
 
 const Stack = createStackNavigator();
 
@@ -200,6 +201,14 @@ const AppContent: React.FC = () => {
                         component={SettingsScreen}
                         options={{ 
                           title: 'Settings',
+                          presentation: 'modal',
+                        }}
+                      />
+                      <Stack.Screen
+                        name="VoiceTest"
+                        component={VoiceTestScreen}
+                        options={{ 
+                          title: 'Voice Test',
                           presentation: 'modal',
                         }}
                       />

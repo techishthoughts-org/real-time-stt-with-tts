@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import Tts from 'react-native-tts';
-import Voice from '@react-native-community/voice';
+import { Platform } from 'react-native';
+import { voiceService } from '../services/platformVoiceService';
+import { logger } from '@voice/observability';
 
 interface VoiceAssistantState {
   isListening: boolean;
@@ -93,125 +94,141 @@ export const VoiceAssistantProvider: React.FC<{ children: React.ReactNode }> = (
   const [state, dispatch] = useReducer(voiceAssistantReducer, initialState);
 
   useEffect(() => {
-    // Initialize voice recognition
-    Voice.onSpeechStart = () => dispatch({ type: 'START_LISTENING' });
-    Voice.onSpeechEnd = () => dispatch({ type: 'STOP_LISTENING' });
-    Voice.onSpeechResults = (event) => {
-      if (event.value && event.value.length > 0) {
-        const transcription = event.value[0];
-        dispatch({ type: 'SET_TRANSCRIPTION', payload: transcription });
-        handleVoiceInput(transcription);
+    // Set up voice service callbacks
+    if (Platform.OS === 'web') {
+      // For web, set up callbacks for the web voice service
+      const webVoiceService = voiceService as any;
+      if (webVoiceService.setTranscriptionCallback) {
+        webVoiceService.setTranscriptionCallback((text: string) => {
+          dispatch({ type: 'SET_TRANSCRIPTION', payload: text });
+        });
       }
-    };
-    Voice.onSpeechError = (event) => {
-      dispatch({ type: 'SET_ERROR', payload: event.error?.message || 'Speech recognition error' });
-    };
+      if (webVoiceService.setErrorCallback) {
+        webVoiceService.setErrorCallback((error: string) => {
+          dispatch({ type: 'SET_ERROR', payload: error });
+        });
+      }
+    } else {
+      // For native platforms, set up native event listeners
+      const setupNativeListeners = async () => {
+        try {
+          const { Voice } = await import('@react-native-community/voice');
+          const Tts = await import('react-native-tts');
 
-    // Initialize TTS
-    Tts.setDefaultLanguage('pt-BR');
-    Tts.setDefaultRate(0.5);
-    Tts.setDefaultPitch(1.0);
-    Tts.onTtsStart = () => dispatch({ type: 'START_SPEAKING' });
-    Tts.onTtsFinish = () => dispatch({ type: 'STOP_SPEAKING' });
-    Tts.onTtsError = (event) => {
-      dispatch({ type: 'SET_ERROR', payload: event.error || 'TTS error' });
-    };
+          Voice.onSpeechStart = () => dispatch({ type: 'START_LISTENING' });
+          Voice.onSpeechEnd = () => dispatch({ type: 'STOP_LISTENING' });
+          Voice.onSpeechResults = (event) => {
+            if (event.value && event.value.length > 0) {
+              dispatch({ type: 'SET_TRANSCRIPTION', payload: event.value[0] });
+            }
+          };
+          Voice.onSpeechError = (event) => {
+            logger.error('Speech recognition error:', event);
+            dispatch({ type: 'SET_ERROR', payload: event.error?.message || 'Speech recognition failed' });
+          };
 
-    // Check server connection
-    checkServerConnection();
+          Tts.default.on('tts-start', () => dispatch({ type: 'START_SPEAKING' }));
+          Tts.default.on('tts-finish', () => dispatch({ type: 'STOP_SPEAKING' }));
+          Tts.default.on('tts-cancel', () => dispatch({ type: 'STOP_SPEAKING' }));
+          Tts.default.on('tts-error', (event) => {
+            logger.error('TTS error:', event);
+            dispatch({ type: 'SET_ERROR', payload: 'Text-to-speech failed' });
+          });
+        } catch (error) {
+          logger.error('Failed to setup native voice listeners:', error);
+          dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize voice services' });
+        }
+      };
+
+      setupNativeListeners();
+    }
+
+    // Check initial connection
+    dispatch({ type: 'SET_CONNECTED', payload: true });
 
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
-      Tts.removeAllListeners('tts-start');
-      Tts.removeAllListeners('tts-finish');
-      Tts.removeAllListeners('tts-error');
+      // Cleanup
+      if (Platform.OS !== 'web') {
+        const cleanup = async () => {
+          try {
+            const { Voice } = await import('@react-native-community/voice');
+            Voice.destroy().then(Voice.removeAllListeners);
+          } catch (error) {
+            logger.error('Failed to cleanup voice listeners:', error);
+          }
+        };
+        cleanup();
+      }
     };
   }, []);
 
-  const checkServerConnection = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/health');
-      const data = await response.json();
-      dispatch({ type: 'SET_CONNECTED', payload: data.status === 'ok' });
-    } catch (error) {
-      dispatch({ type: 'SET_CONNECTED', payload: false });
-      dispatch({ type: 'SET_ERROR', payload: 'Server connection failed' });
-    }
-  };
-
-  const handleVoiceInput = async (transcription: string) => {
-    try {
-      await sendMessage(transcription);
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to process voice input' });
-    }
-  };
-
   const startListening = async () => {
     try {
-      await Voice.start('pt-BR');
+      dispatch({ type: 'CLEAR_ERROR' });
+      await voiceService.startListening();
+      logger.info('Started listening');
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to start voice recognition' });
+      logger.error('Failed to start listening:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to start listening' });
     }
   };
 
   const stopListening = async () => {
     try {
-      await Voice.stop();
+      await voiceService.stopListening();
+      logger.info('Stopped listening');
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to stop voice recognition' });
+      logger.error('Failed to stop listening:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to stop listening' });
     }
   };
 
   const speak = async (text: string) => {
     try {
-      await Tts.speak(text);
+      dispatch({ type: 'CLEAR_ERROR' });
+      await voiceService.speak(text);
+      logger.info('Started speaking:', text);
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to speak text' });
+      logger.error('Failed to speak:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to speak' });
     }
   };
 
   const stopSpeaking = async () => {
     try {
-      await Tts.stop();
+      await voiceService.stopSpeaking();
+      logger.info('Stopped speaking');
     } catch (error) {
+      logger.error('Failed to stop speaking:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to stop speaking' });
-    }
-  };
-
-  const sendMessage = async (message: string) => {
-    try {
-      const response = await fetch('http://localhost:3000/llm/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-token', // In production, use real auth
-        },
-        body: JSON.stringify({ message }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response from server');
-      }
-
-      const data = await response.json();
-      const assistantResponse = data.response?.response || data.response || 'Sorry, I could not process your request.';
-
-      dispatch({ type: 'SET_RESPONSE', payload: assistantResponse });
-      dispatch({
-        type: 'ADD_CONVERSATION',
-        payload: { userMessage: message, assistantResponse }
-      });
-
-      // Speak the response
-      await speak(assistantResponse);
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to send message' });
     }
   };
 
   const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
+  };
+
+  const sendMessage = async (message: string) => {
+    try {
+      dispatch({ type: 'CLEAR_ERROR' });
+      
+      // Simulate AI response (replace with actual API call)
+      const response = `I received your message: "${message}". This is a simulated response.`;
+      
+      dispatch({ type: 'SET_RESPONSE', payload: response });
+      dispatch({ 
+        type: 'ADD_CONVERSATION', 
+        payload: { userMessage: message, assistantResponse: response } 
+      });
+
+      // Speak the response
+      await speak(response);
+      
+      logger.info('Message sent and response received');
+    } catch (error) {
+      logger.error('Failed to send message:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to send message' });
+    }
   };
 
   const value: VoiceAssistantContextType = {
@@ -231,7 +248,7 @@ export const VoiceAssistantProvider: React.FC<{ children: React.ReactNode }> = (
   );
 };
 
-export const useVoiceAssistant = (): VoiceAssistantContextType => {
+export const useVoiceAssistant = () => {
   const context = useContext(VoiceAssistantContext);
   if (context === undefined) {
     throw new Error('useVoiceAssistant must be used within a VoiceAssistantProvider');

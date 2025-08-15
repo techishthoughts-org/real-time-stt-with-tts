@@ -1,4 +1,91 @@
-// Mock React Native polyfills - using moduleNameMapper instead
+// Mock React Native
+jest.mock('react-native', () => ({
+  Platform: {
+    OS: 'ios',
+    select: jest.fn((obj) => obj.ios || obj.default),
+  },
+  Alert: {
+    alert: jest.fn(),
+  },
+  AppState: {
+    currentState: 'active',
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+  },
+  StatusBar: {
+    setBarStyle: jest.fn(),
+    setHidden: jest.fn(),
+  },
+  Dimensions: {
+    get: jest.fn(() => ({ width: 375, height: 812 })),
+  },
+  StyleSheet: {
+    create: jest.fn((styles) => styles),
+    flatten: jest.fn((style) => style),
+  },
+  View: 'View',
+  Text: 'Text',
+  TouchableOpacity: 'TouchableOpacity',
+  TouchableHighlight: 'TouchableHighlight',
+  TouchableWithoutFeedback: 'TouchableWithoutFeedback',
+  ScrollView: 'ScrollView',
+  FlatList: 'FlatList',
+  Image: 'Image',
+  TextInput: 'TextInput',
+  Button: 'Button',
+  Switch: 'Switch',
+  Modal: 'Modal',
+  ActivityIndicator: 'ActivityIndicator',
+  SafeAreaView: 'SafeAreaView',
+  KeyboardAvoidingView: 'KeyboardAvoidingView',
+  Animated: {
+    Value: jest.fn(),
+    timing: jest.fn(),
+    spring: jest.fn(),
+    View: 'Animated.View',
+  },
+  Linking: {
+    openURL: jest.fn(),
+  },
+  PermissionsAndroid: {
+    request: jest.fn(),
+    PERMISSIONS: {
+      RECORD_AUDIO: 'android.permission.RECORD_AUDIO',
+      WRITE_EXTERNAL_STORAGE: 'android.permission.WRITE_EXTERNAL_STORAGE',
+    },
+    RESULTS: {
+      GRANTED: 'granted',
+      DENIED: 'denied',
+    },
+  },
+  NativeModules: {
+    VoiceModule: {
+      start: jest.fn(),
+      stop: jest.fn(),
+      destroy: jest.fn(),
+    },
+    TTSModule: {
+      speak: jest.fn(),
+      stop: jest.fn(),
+    },
+  },
+  NativeEventEmitter: jest.fn(() => ({
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  })),
+}));
+
+// Mock React Native Device Info
+jest.mock('react-native-device-info', () => ({
+  isEmulator: jest.fn().mockResolvedValue(false),
+  isRooted: jest.fn().mockResolvedValue(false),
+  getBrand: jest.fn().mockResolvedValue('Apple'),
+  getSystemVersion: jest.fn().mockResolvedValue('15.0'),
+  getModel: jest.fn().mockResolvedValue('iPhone 13'),
+  getUniqueId: jest.fn().mockResolvedValue('test-device-id'),
+  getVersion: jest.fn().mockResolvedValue('1.0.0'),
+  getBuildNumber: jest.fn().mockResolvedValue('1'),
+}));
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -6,40 +93,10 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
-}));
-
-// Mock NetInfo
-jest.mock('@react-native-community/netinfo', () => ({
-  fetch: jest.fn(() => Promise.resolve({ isConnected: true })),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-}));
-
-// Mock React Native Voice
-jest.mock('@react-native-community/voice', () => ({
-  onSpeechStart: jest.fn(),
-  onSpeechRecognized: jest.fn(),
-  onSpeechEnd: jest.fn(),
-  onSpeechError: jest.fn(),
-  onSpeechResults: jest.fn(),
-  onSpeechPartialResults: jest.fn(),
-  onSpeechVolumeChanged: jest.fn(),
-  start: jest.fn(),
-  stop: jest.fn(),
-  destroy: jest.fn(),
-  removeAllListeners: jest.fn(),
-}));
-
-// Mock React Native TTS
-jest.mock('react-native-tts', () => ({
-  speak: jest.fn(),
-  stop: jest.fn(),
-  pause: jest.fn(),
-  resume: jest.fn(),
-  setDefaultLanguage: jest.fn(),
-  setDefaultRate: jest.fn(),
-  setDefaultPitch: jest.fn(),
-  getInitStatus: jest.fn(() => Promise.resolve('success')),
+  getAllKeys: jest.fn(),
+  multiGet: jest.fn(),
+  multiSet: jest.fn(),
+  multiRemove: jest.fn(),
 }));
 
 // Mock React Native Permissions
@@ -47,11 +104,10 @@ jest.mock('react-native-permissions', () => ({
   PERMISSIONS: {
     IOS: {
       MICROPHONE: 'ios.permission.MICROPHONE',
-      NOTIFICATIONS: 'ios.permission.NOTIFICATIONS',
+      SPEECH_RECOGNIZER: 'ios.permission.SPEECH_RECOGNIZER',
     },
     ANDROID: {
       RECORD_AUDIO: 'android.permission.RECORD_AUDIO',
-      POST_NOTIFICATIONS: 'android.permission.POST_NOTIFICATIONS',
     },
   },
   RESULTS: {
@@ -63,173 +119,52 @@ jest.mock('react-native-permissions', () => ({
   },
   request: jest.fn(),
   check: jest.fn(),
-  requestMultiple: jest.fn(),
 }));
 
-// Mock React Native Keychain
-jest.mock('react-native-keychain', () => ({
-  setInternetCredentials: jest.fn(),
-  getInternetCredentials: jest.fn(),
-  resetInternetCredentials: jest.fn(),
-  setGenericPassword: jest.fn(),
-  getGenericPassword: jest.fn(),
-  resetGenericPassword: jest.fn(),
+// Mock React Navigation
+jest.mock('@react-navigation/native', () => ({
+  NavigationContainer: ({ children }) => children,
+  useNavigation: () => ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    setOptions: jest.fn(),
+  }),
+  useRoute: () => ({
+    params: {},
+  }),
 }));
 
-// Mock React Native Biometrics
-jest.mock('react-native-biometrics', () => ({
-  isSensorAvailable: jest.fn(() => Promise.resolve({ available: true, biometryType: 'TouchID' })),
-  simplePrompt: jest.fn(() => Promise.resolve({ success: true })),
-  createKeys: jest.fn(),
-  deleteKeys: jest.fn(),
-  createSignature: jest.fn(),
-  sensorExists: jest.fn(),
+jest.mock('@react-navigation/stack', () => ({
+  createStackNavigator: () => ({
+    Navigator: ({ children }) => children,
+    Screen: ({ children }) => children,
+  }),
 }));
 
-// Mock React Native Device Info
-jest.mock('react-native-device-info', () => ({
-  getBrand: jest.fn(() => Promise.resolve('Apple')),
-  getModel: jest.fn(() => Promise.resolve('iPhone')),
-  getSystemVersion: jest.fn(() => Promise.resolve('15.0')),
-  getBuildNumber: jest.fn(() => Promise.resolve('1')),
-  isEmulator: jest.fn(() => Promise.resolve(false)),
-  isRooted: jest.fn(() => Promise.resolve(false)),
-  isTablet: jest.fn(() => Promise.resolve(false)),
+// Mock React Native Gesture Handler
+jest.mock('react-native-gesture-handler', () => ({
+  GestureHandlerRootView: ({ children }) => children,
+  PanGestureHandler: ({ children }) => children,
+  TapGestureHandler: ({ children }) => children,
+  State: {
+    UNDETERMINED: 0,
+    FAILED: 1,
+    BEGAN: 2,
+    CANCELLED: 3,
+    ACTIVE: 4,
+    END: 5,
+  },
 }));
 
-// Mock React Native Linear Gradient
-jest.mock('react-native-linear-gradient', () => 'LinearGradient');
-
-// Mock Lottie React Native
-jest.mock('lottie-react-native', () => 'LottieView');
-
-// Mock React Native Splash Screen
-jest.mock('react-native-splash-screen', () => ({
-  hide: jest.fn(),
-  show: jest.fn(),
-}));
-
-// Mock React Native Haptic Feedback
-jest.mock('react-native-haptic-feedback', () => ({
-  trigger: jest.fn(),
-}));
-
-// Mock React Native Sound
-jest.mock('react-native-sound', () => {
-  const Sound = jest.fn().mockImplementation(() => ({
-    play: jest.fn(),
-    pause: jest.fn(),
-    stop: jest.fn(),
-    release: jest.fn(),
-    setVolume: jest.fn(),
-    setNumberOfLoops: jest.fn(),
-  }));
-  Sound.setCategory = jest.fn();
-  return Sound;
-});
-
-// Mock React Native Audio Recorder Player
-jest.mock('react-native-audio-recorder-player', () => ({
-  AudioRecorderPlayer: jest.fn().mockImplementation(() => ({
-    startRecorder: jest.fn(),
-    stopRecorder: jest.fn(),
-    startPlayer: jest.fn(),
-    stopPlayer: jest.fn(),
-    pausePlayer: jest.fn(),
-    resumePlayer: jest.fn(),
-    seekToPlayer: jest.fn(),
-    setVolume: jest.fn(),
-    addRecordBackListener: jest.fn(),
-    addPlayBackListener: jest.fn(),
-    removeRecordBackListener: jest.fn(),
-    removePlayBackListener: jest.fn(),
-  })),
-}));
-
-// Mock React Native Push Notification
-jest.mock('react-native-push-notification', () => ({
-  configure: jest.fn(),
-  localNotification: jest.fn(),
-  localNotificationSchedule: jest.fn(),
-  cancelAllLocalNotifications: jest.fn(),
-  cancelLocalNotifications: jest.fn(),
-  getScheduledLocalNotifications: jest.fn(),
-  getDeliveredNotifications: jest.fn(),
-  removeDeliveredNotifications: jest.fn(),
-  removeAllDeliveredNotifications: jest.fn(),
-  requestPermissions: jest.fn(),
-  abandonPermissions: jest.fn(),
-  checkPermissions: jest.fn(),
-  getInitialNotification: jest.fn(),
-  getBadgeCount: jest.fn(),
-  setBadgeCount: jest.fn(),
-  clearAllNotifications: jest.fn(),
-  getChannels: jest.fn(),
-  channelExists: jest.fn(),
-  createChannel: jest.fn(),
-  channelBlocked: jest.fn(),
-  deleteChannel: jest.fn(),
-}));
-
-// Mock React Native Background Timer
-jest.mock('react-native-background-timer', () => ({
-  start: jest.fn(),
-  stop: jest.fn(),
-  setTimeout: jest.fn(),
-  clearTimeout: jest.fn(),
-  setInterval: jest.fn(),
-  clearInterval: jest.fn(),
-}));
-
-// Mock React Native SVG
-jest.mock('react-native-svg', () => ({
-  Svg: 'Svg',
-  Circle: 'Circle',
-  Ellipse: 'Ellipse',
-  G: 'G',
-  Text: 'Text',
-  TSpan: 'TSpan',
-  TextPath: 'TextPath',
-  Path: 'Path',
-  Polygon: 'Polygon',
-  Polyline: 'Polyline',
-  Line: 'Line',
-  Rect: 'Rect',
-  Use: 'Use',
-  Image: 'Image',
-  Symbol: 'Symbol',
-  Defs: 'Defs',
-  LinearGradient: 'LinearGradient',
-  RadialGradient: 'RadialGradient',
-  Stop: 'Stop',
-  ClipPath: 'ClipPath',
-  Mask: 'Mask',
-  Pattern: 'Pattern',
-}));
-
-// Mock React Native Elements
-jest.mock('react-native-elements', () => ({
-  Button: 'Button',
-  Card: 'Card',
-  Input: 'Input',
-  Icon: 'Icon',
-  ListItem: 'ListItem',
-  Overlay: 'Overlay',
-  Text: 'Text',
-  Avatar: 'Avatar',
-  Badge: 'Badge',
-  CheckBox: 'CheckBox',
-  Divider: 'Divider',
-  Header: 'Header',
-  PricingCard: 'PricingCard',
-  Rating: 'Rating',
-  SearchBar: 'SearchBar',
-  Slider: 'Slider',
-  SocialIcon: 'SocialIcon',
-  Tab: 'Tab',
-  TabView: 'TabView',
-  Tile: 'Tile',
-  Tooltip: 'Tooltip',
+// Mock React Native Safe Area Context
+jest.mock('react-native-safe-area-context', () => ({
+  SafeAreaProvider: ({ children }) => children,
+  useSafeAreaInsets: () => ({
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  }),
 }));
 
 // Mock React Native Vector Icons
@@ -245,30 +180,6 @@ jest.mock('react-native-vector-icons', () => ({
 jest.mock('react-native-config', () => ({
   API_BASE_URL: 'http://localhost:3030',
   ENV: 'test',
-}));
-
-// Mock React Native Crashlytics
-jest.mock('react-native-crashlytics', () => ({
-  crash: jest.fn(),
-  log: jest.fn(),
-  recordError: jest.fn(),
-  setUserIdentifier: jest.fn(),
-  setUserName: jest.fn(),
-  setUserEmail: jest.fn(),
-  setBool: jest.fn(),
-  setString: jest.fn(),
-  setNumber: jest.fn(),
-}));
-
-// Mock React Native Performance
-jest.mock('react-native-performance', () => ({
-  PerformanceObserver: jest.fn(),
-  Performance: jest.fn(),
-}));
-
-// Mock React Native Flipper
-jest.mock('react-native-flipper', () => ({
-  addPlugin: jest.fn(),
 }));
 
 // Mock React Query
@@ -288,11 +199,73 @@ jest.mock('react-hook-form', () => ({
 
 // Mock Zustand
 jest.mock('zustand', () => ({
-  create: jest.fn(),
+  create: jest.fn(() => {
+    const storeState = {
+      user: null,
+      isAuthenticated: false,
+      sessionToken: null,
+      isListening: false,
+      isSpeaking: false,
+      isConnected: false,
+      transcription: '',
+      response: '',
+      audioLevel: 0,
+      conversations: [],
+      currentConversation: null,
+      isLoading: false,
+      error: null,
+      settings: {},
+      permissions: {},
+      reset: jest.fn(),
+      setUser: jest.fn(),
+      setAuthenticated: jest.fn(),
+      setSessionToken: jest.fn(),
+      setListening: jest.fn(),
+      setSpeaking: jest.fn(),
+      setConnected: jest.fn(),
+      setTranscription: jest.fn(),
+      setResponse: jest.fn(),
+      setAudioLevel: jest.fn(),
+      addConversation: jest.fn(),
+      clearConversations: jest.fn(),
+      setCurrentConversation: jest.fn(),
+      setLoading: jest.fn(),
+      setError: jest.fn(),
+      updateSettings: jest.fn(),
+      setPermission: jest.fn(),
+      updatePermissions: jest.fn(),
+    };
+    
+    return jest.fn((selector) => {
+      if (selector) {
+        return selector(storeState);
+      }
+      return storeState;
+    });
+  }),
 }));
 
 // Global fetch mock
 global.fetch = jest.fn();
+
+// Mock document for React Native Testing Library
+global.document = {
+  createElement: jest.fn(() => ({
+    setAttribute: jest.fn(),
+    getAttribute: jest.fn(),
+    appendChild: jest.fn(),
+    removeChild: jest.fn(),
+  })),
+  getElementById: jest.fn(),
+  querySelector: jest.fn(),
+  querySelectorAll: jest.fn(),
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  createTextNode: jest.fn(),
+  head: {
+    appendChild: jest.fn(),
+  },
+};
 
 // Global console mock to reduce noise in tests
 global.console = {

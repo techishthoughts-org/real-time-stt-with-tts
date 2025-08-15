@@ -1,0 +1,11 @@
+Starting project at /Users/arthurcosta/dev/personal/real-time-stt-with-tts/packages/mobile-app
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Recrawled this watch 35 times, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/arthurcosta/dev/personal/real-time-stt-with-tts' ; watchman watch-project '/Users/arthurcosta/dev/personal/real-time-stt-with-tts'`
+

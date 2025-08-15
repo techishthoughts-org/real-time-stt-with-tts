@@ -1,0 +1,15 @@
+Starting project at /Users/arthurcosta/dev/personal/real-time-stt-with-tts/packages/mobile-app
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Error: Could not find MIME for Buffer <null>
+    at Jimp.parseBitmap (/Users/arthurcosta/dev/personal/real-time-stt-with-tts/node_modules/.pnpm/jimp-compact@0.16.1/node_modules/jimp-compact/dist/jimp.js:1:125518)
+    at Jimp.parseBitmap (/Users/arthurcosta/dev/personal/real-time-stt-with-tts/node_modules/.pnpm/jimp-compact@0.16.1/node_modules/jimp-compact/dist/jimp.js:1:8514)
+    at /Users/arthurcosta/dev/personal/real-time-stt-with-tts/node_modules/.pnpm/jimp-compact@0.16.1/node_modules/jimp-compact/dist/jimp.js:1:7613
+    at FSReqCallback.readFileAfterClose [as oncomplete] (node:internal/fs/read/context:68:3)
+Error: Could not find MIME for Buffer <null>
+    at Jimp.parseBitmap (/Users/arthurcosta/dev/personal/real-time-stt-with-tts/node_modules/.pnpm/jimp-compact@0.16.1/node_modules/jimp-compact/dist/jimp.js:1:125518)
+    at Jimp.parseBitmap (/Users/arthurcosta/dev/personal/real-time-stt-with-tts/node_modules/.pnpm/jimp-compact@0.16.1/node_modules/jimp-compact/dist/jimp.js:1:8514)
+    at /Users/arthurcosta/dev/personal/real-time-stt-with-tts/node_modules/.pnpm/jimp-compact@0.16.1/node_modules/jimp-compact/dist/jimp.js:1:7613
+    at FSReqCallback.readFileAfterClose [as oncomplete] (node:internal/fs/read/context:68:3)

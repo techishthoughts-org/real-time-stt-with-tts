@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useEffect, useState } from 'react';
 
 function App() {
@@ -75,7 +76,7 @@ function App() {
     try {
       setStatus('Sending message...');
       const result = await window.electronAPI.sendMessage(transcript);
-      setResponse(result.response || '');
+      setResponse((result as any)?.response || '');
       setStatus('Response received');
     } catch (error) {
       console.error('Failed to send message:', error);

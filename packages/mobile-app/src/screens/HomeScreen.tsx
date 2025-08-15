@@ -94,6 +94,14 @@ const HomeScreen: React.FC = () => {
             />
           </TouchableOpacity>
 
+          {/* Test Button */}
+          <TouchableOpacity
+            style={styles.testButton}
+            onPress={() => navigation.navigate('VoiceTest' as never)}
+          >
+            <Text style={styles.testButtonText}>🧪 Voice Test Interface</Text>
+          </TouchableOpacity>
+
           {/* Transcription */}
           {state.transcription && (
             <View style={styles.transcriptionContainer}>
@@ -277,6 +285,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '500',
+  },
+  testButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 32,
+    width: '100%',
+  },
+  testButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

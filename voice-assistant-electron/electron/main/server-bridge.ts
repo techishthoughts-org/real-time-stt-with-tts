@@ -10,7 +10,7 @@ class ServerBridge {
   }
 
   private setupIPC() {
-    ipcMain.handle('llm:send', async (_, message: string) => {
+    ipcMain.handle('llm:send', async (_: any, message: string) => {
       try {
         const token = await this.getAuthToken();
         const response = await fetch(`${this.serverUrl}/llm/chat`, {
@@ -75,8 +75,8 @@ class ServerBridge {
 
       if (response.ok) {
         const data = await response.json();
-        this.authToken = data.token;
-        return this.authToken;
+        this.authToken = (data as any).token;
+        return this.authToken || '';
       } else {
         throw new Error('Failed to get auth token');
       }

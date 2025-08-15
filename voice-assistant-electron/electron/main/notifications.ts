@@ -49,8 +49,8 @@ export class NotificationService {
       icon: options.icon ? nativeImage.createFromPath(options.icon) : undefined,
       silent: options.silent || false,
       timeoutType: options.timeoutType || 'default',
-      urgency: options.urgency || 'normal',
-      actions: options.actions,
+      urgency: (options.urgency === 'high' ? 'normal' : options.urgency) || 'normal',
+      actions: options.actions?.filter(action => action.type === 'button') as any,
       replyPlaceholder: options.replyPlaceholder,
     });
 
@@ -60,12 +60,12 @@ export class NotificationService {
       this.handleNotificationClick(options);
     });
 
-    notification.on('action', (event, index) => {
+    notification.on('action', (_event: any, index: any) => {
       console.log('📢 Notification action clicked:', index);
       this.handleNotificationAction(options, index);
     });
 
-    notification.on('reply', (event, reply) => {
+    notification.on('reply', (_event: any, reply: any) => {
       console.log('📢 Notification reply:', reply);
       this.handleNotificationReply(options, reply);
     });
@@ -231,7 +231,7 @@ export class NotificationService {
     }
   }
 
-  private handleNotificationReply(options: NotificationOptions, reply: string): void {
+  private handleNotificationReply(_options: NotificationOptions, reply: string): void {
     console.log('📢 Handling notification reply:', reply);
     // Handle reply - could send to voice assistant
   }

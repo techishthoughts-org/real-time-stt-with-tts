@@ -29,7 +29,7 @@ class AudioProcessor {
       await this.stopRecording();
     });
 
-    ipcMain.handle('voice:frame', async (_, data: ArrayBuffer) => {
+    ipcMain.handle('voice:frame', async (_: any, data: ArrayBuffer) => {
       await this.processAudioFrame(data);
     });
 
@@ -84,7 +84,7 @@ class AudioProcessor {
       const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
 
       // Send to STT engine
-      const text = await this.transcribeAudio(arrayBuffer);
+      const text = await this.transcribeAudio(arrayBuffer as ArrayBuffer);
       if (text) {
         // Send to LLM
         const response = await this.getLLMResponse(text);
