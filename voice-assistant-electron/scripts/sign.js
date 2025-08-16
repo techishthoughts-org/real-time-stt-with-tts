@@ -31,7 +31,7 @@ function checkRequirements() {
   // Check if Xcode command line tools are installed
   try {
     execSync('xcode-select --print-path', { stdio: 'ignore' });
-  } catch (error) {
+  } catch {
     console.error('❌ Xcode command line tools not found. Please install them first:');
     console.error('   xcode-select --install');
     return false;
@@ -62,7 +62,7 @@ function getDeveloperIdentity() {
     }
 
     return null;
-  } catch (error) {
+  } catch {
     console.error('❌ Failed to find developer identity');
     return null;
   }

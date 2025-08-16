@@ -12,7 +12,6 @@ const ReactNative = {
   TextInput: 'TextInput',
   Switch: 'Switch',
   ActivityIndicator: 'ActivityIndicator',
-  Alert: 'Alert',
   Animated: {
     View: 'Animated.View',
     Text: 'Animated.Text',

@@ -244,9 +244,9 @@ const HealthIndicator: React.FC<{
 
 const App: React.FC = () => {
   return (
-    <div data-testid="app-container">
+    <View testID="app-container">
       <AppContent />
-    </div>
+    </View>
   );
 };
 

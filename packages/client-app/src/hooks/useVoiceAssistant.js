@@ -101,7 +101,7 @@ export const useVoiceAssistant = () => {
             try {
                 recognition.start();
             }
-            catch (error) {
+            catch {
                 setState(prev => ({
                     ...prev,
                     error: 'Failed to start speech recognition',
@@ -115,7 +115,7 @@ export const useVoiceAssistant = () => {
             try {
                 recognition.stop();
             }
-            catch (error) {
+            catch {
                 setState(prev => ({
                     ...prev,
                     error: 'Failed to stop speech recognition',

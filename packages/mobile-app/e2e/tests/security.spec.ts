@@ -4,16 +4,16 @@ test.describe('Security - E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to app
     await page.goto('/');
-    await page.waitForSelector('[data-testid="app-container"]', { timeout: 30000 });
+    await page.waitForSelector('[testID="app-container"]', { timeout: 30000 });
   });
 
   test.describe('Authentication Security', () => {
     test('should prevent brute force attacks', async ({ page }) => {
       // Attempt multiple failed logins
       for (let i = 0; i < 5; i++) {
-        await page.fill('[data-testid="email-input"]', 'test@example.com');
-        await page.fill('[data-testid="password-input"]', 'wrongpassword');
-        await page.click('[data-testid="login-submit"]');
+        await page.fill('[testID="email-input"]', 'test@example.com');
+        await page.fill('[testID="password-input"]', 'wrongpassword');
+        await page.click('[testID="login-submit"]');
 
         // Should show error message
         await expect(page.locator('text=Invalid credentials')).toBeVisible();
@@ -23,14 +23,14 @@ test.describe('Security - E2E Tests', () => {
       await expect(page.locator('text=Too many failed attempts')).toBeVisible();
 
       // Should disable login form
-      await expect(page.locator('[data-testid="login-submit"]')).toBeDisabled();
+      await expect(page.locator('[testID="login-submit"]')).toBeDisabled();
     });
 
     test('should validate password strength', async ({ page }) => {
       // Try weak password
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', '123');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', '123');
+      await page.click('[testID="login-submit"]');
 
       // Should show password strength error
       await expect(page.locator('text=Password too weak')).toBeVisible();
@@ -38,9 +38,9 @@ test.describe('Security - E2E Tests', () => {
 
     test('should prevent SQL injection', async ({ page }) => {
       // Try SQL injection in email field
-      await page.fill('[data-testid="email-input"]', "'; DROP TABLE users; --");
-      await page.fill('[data-testid="password-input"]', 'password');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', "'; DROP TABLE users; --");
+      await page.fill('[testID="password-input"]', 'password');
+      await page.click('[testID="login-submit"]');
 
       // Should show validation error, not crash
       await expect(page.locator('text=Invalid email format')).toBeVisible();
@@ -48,9 +48,9 @@ test.describe('Security - E2E Tests', () => {
 
     test('should prevent XSS attacks', async ({ page }) => {
       // Try XSS in email field
-      await page.fill('[data-testid="email-input"]', '<script>alert("xss")</script>');
-      await page.fill('[data-testid="password-input"]', 'password');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', '<script>alert("xss")</script>');
+      await page.fill('[testID="password-input"]', 'password');
+      await page.click('[testID="login-submit"]');
 
       // Should show validation error, not execute script
       await expect(page.locator('text=Invalid email format')).toBeVisible();
@@ -64,10 +64,10 @@ test.describe('Security - E2E Tests', () => {
 
     test('should handle session timeout', async ({ page }) => {
       // Login successfully
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Simulate session timeout
       await page.evaluate(() => {
@@ -79,23 +79,23 @@ test.describe('Security - E2E Tests', () => {
       await page.reload();
 
       // Should redirect to login
-      await expect(page.locator('[data-testid="login-screen"]')).toBeVisible();
+      await expect(page.locator('[testID="login-screen"]')).toBeVisible();
     });
 
     test('should support biometric authentication', async ({ page }) => {
       // Check if biometric option is available
-      const biometricButton = page.locator('[data-testid="biometric-login"]');
+      const biometricButton = page.locator('[testID="biometric-login"]');
 
       if (await biometricButton.isVisible()) {
         // Click biometric login
         await biometricButton.click();
 
         // Should show biometric prompt
-        await expect(page.locator('[data-testid="biometric-prompt"]')).toBeVisible();
+        await expect(page.locator('[testID="biometric-prompt"]')).toBeVisible();
 
         // Should handle biometric success
-        await page.click('[data-testid="biometric-success"]');
-        await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+        await page.click('[testID="biometric-success"]');
+        await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
       }
     });
   });
@@ -103,14 +103,14 @@ test.describe('Security - E2E Tests', () => {
   test.describe('Data Protection', () => {
     test('should encrypt sensitive data', async ({ page }) => {
       // Login to access settings
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Navigate to settings
-      await page.click('[data-testid="settings-button"]');
-      await expect(page.locator('[data-testid="settings-screen"]')).toBeVisible();
+      await page.click('[testID="settings-button"]');
+      await expect(page.locator('[testID="settings-screen"]')).toBeVisible();
 
       // Check if sensitive data is encrypted in storage
       const storageData = await page.evaluate(() => {
@@ -123,14 +123,14 @@ test.describe('Security - E2E Tests', () => {
 
     test('should clear data on logout', async ({ page }) => {
       // Login
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Logout
-      await page.click('[data-testid="logout-button"]');
-      await page.click('[data-testid="confirm-logout"]');
+      await page.click('[testID="logout-button"]');
+      await page.click('[testID="confirm-logout"]');
 
       // Should clear sensitive data
       const sessionToken = await page.evaluate(() => {
@@ -145,9 +145,9 @@ test.describe('Security - E2E Tests', () => {
       page.on('console', msg => logs.push(msg.text()));
 
       // Login with sensitive data
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
 
       // Should not log sensitive information
       const sensitiveDataInLogs = logs.some(log =>
@@ -162,9 +162,9 @@ test.describe('Security - E2E Tests', () => {
       page.on('request', request => requests.push(request.url()));
 
       // Login
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
 
       // Should use HTTPS for all requests
       const insecureRequests = requests.filter(url => url.startsWith('http://'));
@@ -184,9 +184,9 @@ test.describe('Security - E2E Tests', () => {
       });
 
       // Try to login
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
 
       // Should show SSL error
       await expect(page.locator('text=SSL Certificate Error')).toBeVisible();
@@ -203,7 +203,7 @@ test.describe('Security - E2E Tests', () => {
       );
 
       // Try to access API
-      await page.click('[data-testid="voice-record-button"]');
+      await page.click('[testID="voice-record-button"]');
 
       // Should show security warning
       await expect(page.locator('text=Security Warning')).toBeVisible();
@@ -219,7 +219,7 @@ test.describe('Security - E2E Tests', () => {
       );
 
       // Try to perform action
-      await page.click('[data-testid="voice-record-button"]');
+      await page.click('[testID="voice-record-button"]');
 
       // Should show security error
       await expect(page.locator('text=Security Error')).toBeVisible();
@@ -237,9 +237,9 @@ test.describe('Security - E2E Tests', () => {
       ];
 
       for (const input of maliciousInputs) {
-        await page.fill('[data-testid="email-input"]', input);
-        await page.fill('[data-testid="password-input"]', 'password');
-        await page.click('[data-testid="login-submit"]');
+        await page.fill('[testID="email-input"]', input);
+        await page.fill('[testID="password-input"]', 'password');
+        await page.click('[testID="login-submit"]');
 
         // Should show validation error, not execute script
         await expect(page.locator('text=Invalid input')).toBeVisible();
@@ -248,9 +248,9 @@ test.describe('Security - E2E Tests', () => {
 
     test('should prevent path traversal attacks', async ({ page }) => {
       // Try path traversal in input
-      await page.fill('[data-testid="email-input"]', '../../../etc/passwd');
-      await page.fill('[data-testid="password-input"]', 'password');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', '../../../etc/passwd');
+      await page.fill('[testID="password-input"]', 'password');
+      await page.click('[testID="login-submit"]');
 
       // Should show validation error
       await expect(page.locator('text=Invalid email format')).toBeVisible();
@@ -259,9 +259,9 @@ test.describe('Security - E2E Tests', () => {
     test('should handle oversized inputs', async ({ page }) => {
       // Try oversized input
       const largeInput = 'a'.repeat(10000);
-      await page.fill('[data-testid="email-input"]', largeInput);
-      await page.fill('[data-testid="password-input"]', 'password');
-      await page.click('[data-testid="login-submit"]');
+      await page.fill('[testID="email-input"]', largeInput);
+      await page.fill('[testID="password-input"]', 'password');
+      await page.click('[testID="login-submit"]');
 
       // Should show validation error
       await expect(page.locator('text=Input too long')).toBeVisible();
@@ -271,31 +271,31 @@ test.describe('Security - E2E Tests', () => {
   test.describe('Session Management', () => {
     test('should handle concurrent sessions', async ({ page, context }) => {
       // Login in first session
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Create second session
       const page2 = await context.newPage();
       await page2.goto('/');
-      await page2.waitForSelector('[data-testid="app-container"]');
+      await page2.waitForSelector('[testID="app-container"]');
 
       // Login in second session
-      await page2.fill('[data-testid="email-input"]', 'test@example.com');
-      await page2.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page2.click('[data-testid="login-submit"]');
+      await page2.fill('[testID="email-input"]', 'test@example.com');
+      await page2.fill('[testID="password-input"]', 'TestPassword123!');
+      await page2.click('[testID="login-submit"]');
 
       // Should handle multiple sessions gracefully
-      await expect(page2.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await expect(page2.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
     });
 
     test('should handle session hijacking attempts', async ({ page }) => {
       // Login
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Simulate session hijacking attempt
       await page.evaluate(() => {
@@ -304,27 +304,27 @@ test.describe('Security - E2E Tests', () => {
       });
 
       // Try to access protected resource
-      await page.click('[data-testid="voice-record-button"]');
+      await page.click('[testID="voice-record-button"]');
 
       // Should detect invalid session and redirect to login
-      await expect(page.locator('[data-testid="login-screen"]')).toBeVisible();
+      await expect(page.locator('[testID="login-screen"]')).toBeVisible();
     });
   });
 
   test.describe('Privacy Protection', () => {
     test('should respect privacy settings', async ({ page }) => {
       // Login
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Navigate to privacy settings
-      await page.click('[data-testid="settings-button"]');
-      await page.click('[data-testid="privacy-settings"]');
+      await page.click('[testID="settings-button"]');
+      await page.click('[testID="privacy-settings"]');
 
       // Disable data collection
-      await page.click('[data-testid="data-collection-toggle"]');
+      await page.click('[testID="data-collection-toggle"]');
 
       // Should respect privacy setting
       await expect(page.locator('text=Data collection disabled')).toBeVisible();
@@ -332,37 +332,37 @@ test.describe('Security - E2E Tests', () => {
 
     test('should handle data deletion requests', async ({ page }) => {
       // Login
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Navigate to privacy settings
-      await page.click('[data-testid="settings-button"]');
-      await page.click('[data-testid="privacy-settings"]');
+      await page.click('[testID="settings-button"]');
+      await page.click('[testID="privacy-settings"]');
 
       // Request data deletion
-      await page.click('[data-testid="delete-data-button"]');
-      await page.click('[data-testid="confirm-delete"]');
+      await page.click('[testID="delete-data-button"]');
+      await page.click('[testID="confirm-delete"]');
 
       // Should delete user data
       await expect(page.locator('text=Data deleted successfully')).toBeVisible();
 
       // Should redirect to login
-      await expect(page.locator('[data-testid="login-screen"]')).toBeVisible();
+      await expect(page.locator('[testID="login-screen"]')).toBeVisible();
     });
 
     test('should anonymize user data', async ({ page }) => {
       // Login
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
-      await page.click('[data-testid="login-submit"]');
-      await expect(page.locator('[data-testid="home-screen"]')).toBeVisible({ timeout: 10000 });
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
+      await page.click('[testID="login-submit"]');
+      await expect(page.locator('[testID="home-screen"]')).toBeVisible({ timeout: 10000 });
 
       // Enable data anonymization
-      await page.click('[data-testid="settings-button"]');
-      await page.click('[data-testid="privacy-settings"]');
-      await page.click('[data-testid="anonymize-data-toggle"]');
+      await page.click('[testID="settings-button"]');
+      await page.click('[testID="privacy-settings"]');
+      await page.click('[testID="anonymize-data-toggle"]');
 
       // Should anonymize data
       await expect(page.locator('text=Data anonymization enabled')).toBeVisible();

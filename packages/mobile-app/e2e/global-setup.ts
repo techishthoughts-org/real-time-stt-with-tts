@@ -16,11 +16,11 @@ async function globalSetup(config: FullConfig) {
     console.log('✅ App loaded successfully');
     
     // Wait for app to initialize
-    await page.waitForSelector('[data-testid="app-container"]', { timeout: 30000 });
+    await page.waitForSelector('[testID="app-container"]', { timeout: 30000 });
     console.log('✅ App initialized');
     
     // Check if we need to authenticate
-    const loginButton = await page.$('[data-testid="login-button"]');
+    const loginButton = await page.$('[testID="login-button"]');
     
     if (loginButton) {
       console.log('🔐 Setting up authentication...');
@@ -29,17 +29,17 @@ async function globalSetup(config: FullConfig) {
       await loginButton.click();
       
       // Wait for login form
-      await page.waitForSelector('[data-testid="email-input"]');
+      await page.waitForSelector('[testID="email-input"]');
       
       // Fill login form with test credentials
-      await page.fill('[data-testid="email-input"]', 'test@example.com');
-      await page.fill('[data-testid="password-input"]', 'TestPassword123!');
+      await page.fill('[testID="email-input"]', 'test@example.com');
+      await page.fill('[testID="password-input"]', 'TestPassword123!');
       
       // Submit login form
-      await page.click('[data-testid="login-submit"]');
+      await page.click('[testID="login-submit"]');
       
       // Wait for successful login
-      await page.waitForSelector('[data-testid="home-screen"]', { timeout: 10000 });
+      await page.waitForSelector('[testID="home-screen"]', { timeout: 10000 });
       console.log('✅ Authentication completed');
     } else {
       console.log('✅ Already authenticated');

@@ -44,7 +44,7 @@ export const useAuth = () => {
                     setAuthState(prev => ({ ...prev, isLoading: false }));
                 }
             }
-            catch (error) {
+            catch {
                 setAuthState({
                     user: null,
                     isAuthenticated: false,
