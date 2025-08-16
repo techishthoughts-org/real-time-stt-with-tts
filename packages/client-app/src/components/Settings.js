@@ -1,0 +1,31 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useState } from 'react';
+import { Box, Typography, Card, CardContent, Switch, List, ListItem, ListItemText, ListItemIcon, ListItemSecondaryAction, Button, Slider, FormControl, Select, MenuItem, Alert, } from '@mui/material';
+import { Mic, VolumeUp, Language, Speed, Notifications, Security, Palette, Storage, } from '@mui/icons-material';
+const Settings = () => {
+    const [settings, setSettings] = useState({
+        autoSpeak: true,
+        notifications: true,
+        darkMode: false,
+        offlineMode: false,
+        voiceSpeed: 1.0,
+        voicePitch: 1.0,
+        language: 'pt-BR',
+    });
+    const handleSettingChange = (setting, value) => {
+        setSettings(prev => ({
+            ...prev,
+            [setting]: value,
+        }));
+    };
+    return (_jsxs(Box, { sx: { maxWidth: 800, mx: 'auto' }, children: [_jsxs(Box, { sx: { mb: 4 }, children: [_jsx(Typography, { variant: "h4", component: "h1", gutterBottom: true, children: "Settings" }), _jsx(Typography, { variant: "body1", color: "text.secondary", children: "Customize your Gon Voice Assistant experience" })] }), _jsx(Card, { sx: { mb: 3 }, children: _jsxs(CardContent, { children: [_jsxs(Typography, { variant: "h6", gutterBottom: true, sx: { display: 'flex', alignItems: 'center', gap: 1 }, children: [_jsx(Mic, {}), "Voice Settings"] }), _jsxs(List, { children: [_jsxs(ListItem, { children: [_jsx(ListItemIcon, { children: _jsx(VolumeUp, {}) }), _jsx(ListItemText, { primary: "Auto-speak responses", secondary: "Automatically speak AI responses" }), _jsx(ListItemSecondaryAction, { children: _jsx(Switch, { edge: "end", checked: settings.autoSpeak, onChange: (e) => handleSettingChange('autoSpeak', e.target.checked) }) })] }), _jsxs(ListItem, { children: [_jsx(ListItemIcon, { children: _jsx(Speed, {}) }), _jsx(ListItemText, { primary: "Voice Speed", secondary: `${settings.voiceSpeed}x` }), _jsx(ListItemSecondaryAction, { children: _jsx(Box, { sx: { width: 150 }, children: _jsx(Slider, { value: settings.voiceSpeed, onChange: (_, value) => handleSettingChange('voiceSpeed', value), min: 0.5, max: 2.0, step: 0.1, marks: true, valueLabelDisplay: "auto" }) }) })] }), _jsxs(ListItem, { children: [_jsx(ListItemIcon, { children: _jsx(VolumeUp, {}) }), _jsx(ListItemText, { primary: "Voice Pitch", secondary: `${settings.voicePitch}x` }), _jsx(ListItemSecondaryAction, { children: _jsx(Box, { sx: { width: 150 }, children: _jsx(Slider, { value: settings.voicePitch, onChange: (_, value) => handleSettingChange('voicePitch', value), min: 0.5, max: 2.0, step: 0.1, marks: true, valueLabelDisplay: "auto" }) }) })] })] })] }) }), _jsx(Card, { sx: { mb: 3 }, children: _jsxs(CardContent, { children: [_jsxs(Typography, { variant: "h6", gutterBottom: true, sx: { display: 'flex', alignItems: 'center', gap: 1 }, children: [_jsx(Language, {}), "Language Settings"] }), _jsx(List, { children: _jsxs(ListItem, { children: [_jsx(ListItemIcon, { children: _jsx(Language, {}) }), _jsx(ListItemText, { primary: "Language", secondary: "Select your preferred language" }), _jsx(ListItemSecondaryAction, { children: _jsx(FormControl, { sx: { minWidth: 120 }, children: _jsxs(Select, { value: settings.language, onChange: (e) => handleSettingChange('language', e.target.value), size: "small", children: [_jsx(MenuItem, { value: "pt-BR", children: "Portugu\u00EAs (BR)" }), _jsx(MenuItem, { value: "en-US", children: "English (US)" }), _jsx(MenuItem, { value: "es-ES", children: "Espa\u00F1ol" })] }) }) })] }) })] }) }), _jsx(Card, { sx: { mb: 3 }, children: _jsxs(CardContent, { children: [_jsxs(Typography, { variant: "h6", gutterBottom: true, sx: { display: 'flex', alignItems: 'center', gap: 1 }, children: [_jsx(Palette, {}), "App Settings"] }), _jsxs(List, { children: [_jsxs(ListItem, { children: [_jsx(ListItemIcon, { children: _jsx(Notifications, {}) }), _jsx(ListItemText, { primary: "Push Notifications", secondary: "Receive notifications about updates and features" }), _jsx(ListItemSecondaryAction, { children: _jsx(Switch, { edge: "end", checked: settings.notifications, onChange: (e) => handleSettingChange('notifications', e.target.checked) }) })] }), _jsxs(ListItem, { children: [_jsx(ListItemIcon, { children: _jsx(Palette, {}) }), _jsx(ListItemText, { primary: "Dark Mode", secondary: "Use dark theme for better visibility" }), _jsx(ListItemSecondaryAction, { children: _jsx(Switch, { edge: "end", checked: settings.darkMode, onChange: (e) => handleSettingChange('darkMode', e.target.checked) }) })] }), _jsxs(ListItem, { children: [_jsx(ListItemIcon, { children: _jsx(Storage, {}) }), _jsx(ListItemText, { primary: "Offline Mode", secondary: "Use local processing when possible" }), _jsx(ListItemSecondaryAction, { children: _jsx(Switch, { edge: "end", checked: settings.offlineMode, onChange: (e) => handleSettingChange('offlineMode', e.target.checked) }) })] })] })] }) }), _jsx(Card, { sx: { mb: 3 }, children: _jsxs(CardContent, { children: [_jsxs(Typography, { variant: "h6", gutterBottom: true, sx: { display: 'flex', alignItems: 'center', gap: 1 }, children: [_jsx(Security, {}), "Security & Privacy"] }), _jsx(Alert, { severity: "info", sx: { mb: 2 }, children: "Your data is encrypted and stored securely. We never share your personal information." }), _jsxs(List, { children: [_jsx(ListItem, { children: _jsx(ListItemText, { primary: "Data Usage", secondary: "Your conversations are processed locally when possible" }) }), _jsx(ListItem, { children: _jsx(ListItemText, { primary: "Privacy Policy", secondary: "Read our privacy policy and terms of service" }) })] })] }) }), _jsxs(Box, { sx: { display: 'flex', gap: 2, justifyContent: 'center' }, children: [_jsx(Button, { variant: "contained", onClick: () => console.log('Save settings'), children: "Save Settings" }), _jsx(Button, { variant: "outlined", onClick: () => setSettings({
+                            autoSpeak: true,
+                            notifications: true,
+                            darkMode: false,
+                            offlineMode: false,
+                            voiceSpeed: 1.0,
+                            voicePitch: 1.0,
+                            language: 'pt-BR',
+                        }), children: "Reset to Defaults" })] })] }));
+};
+export default Settings;

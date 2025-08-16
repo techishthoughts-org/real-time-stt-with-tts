@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Gon Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .voice-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 1rem;
+            min-width: 200px;
+        }
+
+        .voice-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .voice-button:active {
+            transform: translateY(0);
+        }
+
+        .voice-button.recording {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-button.listening {
+            background: #4ecdc4;
+            border-color: #4ecdc4;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .messages {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .message {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .message.user {
+            background: rgba(255, 255, 255, 0.2);
+            margin-left: 2rem;
+        }
+
+        .message.assistant {
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: 2rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .control-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .error {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.5);
+            color: #ff6b6b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: rgba(76, 205, 196, 0.2);
+            border: 1px solid rgba(76, 205, 196, 0.5);
+            color: #4ecdc4;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .voice-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎭 Gon Voice Assistant</h1>
+        <p class="subtitle">AI-powered voice assistant for the web</p>
+        
+        <div id="status" class="status">
+            🔍 Checking browser compatibility...
+        </div>
+        
+        <div class="controls">
+            <button id="voiceButton" class="voice-button" onclick="toggleVoice()">
+                🎤 Start Voice Assistant
+            </button>
+            <button class="control-button" onclick="clearMessages()">
+                🗑️ Clear Chat
+            </button>
+            <button class="control-button" onclick="testServer()">
+                🔧 Test Server
+            </button>
+        </div>
+        
+        <div id="messages" class="messages">
+            <div class="message assistant">
+                👋 Hello! I'm Gon, your AI voice assistant. Click the microphone button to start talking!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+        let recognition = null;
+        let synthesis = window.speechSynthesis;
+
+        // Initialize voice recognition
+        function initVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    updateStatus('🎤 Listening...', 'listening');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    addMessage('user', transcript);
+                    processVoiceInput(transcript);
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    updateStatus('❌ Voice recognition error: ' + event.error, 'error');
+                    isRecording = false;
+                    updateVoiceButton();
+                };
+
+                recognition.onend = () => {
+                    if (isRecording) {
+                        recognition.start();
+                    } else {
+                        updateStatus('🎭 Ready to listen', 'success');
+                    }
+                };
+
+                updateStatus('✅ Voice recognition ready!', 'success');
+                return true;
+            } else {
+                updateStatus('❌ Speech recognition not supported in this browser', 'error');
+                return false;
+            }
+        }
+
+        // Initialize speech synthesis
+        function initSpeechSynthesis() {
+            if (synthesis) {
+                updateStatus('✅ Speech synthesis ready!', 'success');
+                return true;
+            } else {
+                updateStatus('❌ Speech synthesis not supported', 'error');
+                return false;
+            }
+        }
+
+        // Toggle voice recording
+        function toggleVoice() {
+            if (!recognition) {
+                if (!initVoiceRecognition()) {
+                    return;
+                }
+            }
+
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // Start recording
+        function startRecording() {
+            isRecording = true;
+            updateVoiceButton();
+            recognition.start();
+        }
+
+        // Stop recording
+        function stopRecording() {
+            isRecording = false;
+            updateVoiceButton();
+            recognition.stop();
+        }
+
+        // Update voice button
+        function updateVoiceButton() {
+            const button = document.getElementById('voiceButton');
+            if (isRecording) {
+                button.textContent = '⏹️ Stop Recording';
+                button.className = 'voice-button recording';
+            } else {
+                button.textContent = '🎤 Start Voice Assistant';
+                button.className = 'voice-button';
+            }
+        }
+
+        // Process voice input
+        function processVoiceInput(transcript) {
+            // Simulate AI response
+            const responses = [
+                `I heard you say: "${transcript}". How can I help you with that?`,
+                `You said: "${transcript}". Let me think about that...`,
+                `Processing: "${transcript}". Here's what I found...`,
+                `I understand you want to know about: "${transcript}". Let me search for that.`
+            ];
+            
+            const response = responses[Math.floor(Math.random() * responses.length)];
+            
+            setTimeout(() => {
+                addMessage('assistant', response);
+                speakText(response);
+            }, 1000);
+        }
+
+        // Add message to chat
+        function addMessage(sender, text) {
+            const messages = document.getElementById('messages');
+            const message = document.createElement('div');
+            message.className = `message ${sender}`;
+            message.textContent = text;
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Speak text
+        function speakText(text) {
+            if (synthesis) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                synthesis.speak(utterance);
+            }
+        }
+
+        // Clear messages
+        function clearMessages() {
+            const messages = document.getElementById('messages');
+            messages.innerHTML = '<div class="message assistant">👋 Chat cleared! How can I help you?</div>';
+        }
+
+        // Test server connection
+        async function testServer() {
+            try {
+                updateStatus('🔧 Testing server connection...', 'listening');
+                const response = await fetch('/health');
+                const data = await response.json();
+                updateStatus(`✅ Server is healthy! Timestamp: ${data.timestamp}`, 'success');
+            } catch (error) {
+                updateStatus('❌ Server connection failed: ' + error.message, 'error');
+            }
+        }
+
+        // Update status
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        // Initialize app
+        function initApp() {
+            updateStatus('🚀 Initializing Gon Voice Assistant...', 'listening');
+            
+            setTimeout(() => {
+                if (initVoiceRecognition() && initSpeechSynthesis()) {
+                    updateStatus('🎭 Ready to assist you! Click the microphone to start.', 'success');
+                }
+            }, 1000);
+        }
+
+        // Start app when page loads
+        window.addEventListener('load', initApp);
+    </script>
+</body>
+</html>

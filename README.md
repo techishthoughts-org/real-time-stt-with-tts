@@ -1,292 +1,348 @@
-# 🎭 Gon Voice Assistant - 2025 Edition
+# 🎭 Gon Voice Assistant - Real-Time STT with TTS
 
-> **Your Personal AI Companion with Enterprise-Grade Security & Modern React Native Architecture**
+A comprehensive monorepo featuring a real-time voice assistant with speech-to-text (STT) and text-to-speech (TTS) capabilities across multiple platforms.
 
-[![React Native](https://img.shields.io/badge/React%20Native-0.73+-blue.svg)](https://reactnative.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.4+-blue.svg)](https://www.typescriptlang.org/)
-[![Security](https://img.shields.io/badge/Security-A+%20Grade-green.svg)](https://owasp.org/)
-[![Test Coverage](https://img.shields.io/badge/Test%20Coverage-85%25+-green.svg)](https://jestjs.io/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+## 🚀 Quick Start
 
-## 🚀 **2025 React Native Best Practices**
+### Prerequisites
+- Node.js 18.0+
+- pnpm 8.0+
+- Docker (for dependencies)
 
-### **Modern Architecture**
-- **React Native 0.73+** with New Architecture (Fabric + TurboModules)
-- **Expo SDK 53** for cross-platform development
-- **TypeScript 5.4+** with strict mode and comprehensive types
-- **Zustand 4.5+** for lightweight, performant state management
-- **React Query 3.39+** for server state and intelligent caching
-- **React Hook Form 7.50+** for performant form handling
+### Installation & Running
 
-### **Security First (2025 Standards)**
-- **🔐 Biometric Authentication**: TouchID, FaceID, Fingerprint
-- **🔒 Certificate Pinning**: Prevents MITM attacks
-- **🔑 Secure Keychain Storage**: AES-256 encryption
-- **🛡️ Device Security**: Root detection, emulator detection
-- **🔐 SSL Pinning**: Network security hardening
-- **🔒 JWT with Refresh Tokens**: Secure API authentication
-- **🛡️ CSP & Security Headers**: XSS and injection protection
+1. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
 
-### **Performance Optimization**
-- **⚡ Hermes Engine**: Improved JavaScript performance
-- **🎯 Code Splitting**: Lazy loading for better startup time
-- **📱 Memory Management**: Automatic cleanup and optimization
-- **🔄 Background Processing**: Efficient task scheduling
-- **📊 Performance Monitoring**: Real-time metrics and alerts
+2. **Start development servers:**
+   ```bash
+   # Start all services
+   pnpm dev
+   
+   # Or start individual services
+   pnpm --filter @voice/client-app dev
+   pnpm --filter @voice/server dev
+   ```
 
-### **Developer Experience**
-- **🧪 Comprehensive Testing**: 85%+ coverage with React Native Testing Library
-- **📝 TypeScript**: Strict typing with comprehensive type definitions
-- **🎨 ESLint + Prettier**: Code quality and consistent formatting
-- **🔍 React Query DevTools**: Advanced debugging capabilities
-- **📱 Hot Reload**: Instant feedback during development
-- **🔧 Modern Tooling**: Latest dependencies and build tools
+3. **Build all packages:**
+   ```bash
+   pnpm build
+   ```
 
-## 📱 **Cross-Platform Support**
+4. **Run tests:**
+   ```bash
+   pnpm test
+   ```
 
-### **Mobile (React Native + Expo)**
-- **iOS 14+**: Native iOS app with App Store distribution
-- **Android 8+**: Native Android app with Play Store distribution
-- **Expo Go**: Development and testing with Expo Go app
-- **Custom Development Builds**: Full native capabilities
+## 🎯 Features
 
-### **Web (React + Vite)**
-- **Progressive Web App (PWA)**: App-like web experience
-- **Service Worker**: Offline functionality and caching
-- **Responsive Design**: Works on all screen sizes
-- **Modern Browser Support**: Chrome, Firefox, Safari, Edge
+### Core Features
+- ✅ **Real-time Voice Recognition**: Web Speech API and React Native voice recognition
+- ✅ **Text-to-Speech**: Natural speech synthesis across platforms
+- ✅ **Multi-platform Support**: Web, Mobile (React Native), and Desktop (Electron)
+- ✅ **Modern Architecture**: Monorepo with TypeScript and modern tooling
+- ✅ **Comprehensive Testing**: Unit tests, integration tests, and E2E tests
+- ✅ **Security Features**: Authentication, encryption, and secure communication
+- ✅ **PWA Support**: Progressive Web App capabilities
+- ✅ **Voice Biometrics**: User voice identification and authentication
 
-### **Desktop (Electron)**
-- **macOS**: Native macOS app with code signing
-- **Windows**: Windows app with installer
-- **Linux**: AppImage, DEB, and RPM packages
+### Platform Support
+- **Web Client**: React + TypeScript + Vite + Material-UI
+- **Mobile App**: React Native + Expo + TypeScript
+- **Desktop App**: Electron + React + TypeScript
+- **Backend Server**: Fastify + TypeScript + WebSocket
+- **AI Engines**: Multiple LLM providers (OpenRouter, Ollama)
+- **STT Engine**: Whisper.cpp integration
+- **TTS Engine**: Piper TTS integration
 
-## 🏗️ **Architecture Overview**
+## 🏗️ Architecture
 
+### Project Structure
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Gon Voice Assistant                      │
-├─────────────────────────────────────────────────────────────┤
-│  📱 Mobile App (React Native + Expo)                       │
-│  🌐 Web App (React + Vite PWA)                             │
-│  🖥️  Desktop App (Electron)                                │
-├─────────────────────────────────────────────────────────────┤
-│  🔐 Authentication & Security Layer                        │
-│  📊 State Management (Zustand + React Query)               │
-│  🎤 Voice Processing (STT + TTS)                           │
-├─────────────────────────────────────────────────────────────┤
-│  🧠 AI Engine (OpenRouter + Custom Models)                 │
-│  🔄 Real-time Communication (WebSocket)                    │
-│  💾 Data Persistence (Secure Storage)                      │
-└─────────────────────────────────────────────────────────────┘
+real-time-stt-with-tts/
+├── packages/
+│   ├── client-app/          # Web client application
+│   ├── mobile-app/          # React Native mobile app
+│   ├── server/              # Backend API server
+│   ├── voice-assistant-electron/ # Desktop Electron app
+│   ├── engines/             # AI and voice processing engines
+│   │   ├── ai-training/     # AI model training
+│   │   ├── llm-manager/     # LLM orchestration
+│   │   ├── llm-ollama/      # Ollama integration
+│   │   ├── llm-openrouter/  # OpenRouter integration
+│   │   ├── stt-whisper-cpp/ # Whisper.cpp STT
+│   │   └── tts-piper/       # Piper TTS
+│   ├── shared/              # Shared utilities
+│   │   ├── config/          # Configuration management
+│   │   ├── observability/   # Logging and monitoring
+│   │   └── schemas/         # Data schemas and validation
+│   └── sdk-js/              # JavaScript SDK
+├── tests/                   # E2E tests
+├── docker-compose.yml       # Docker services
+└── package.json            # Root package configuration
 ```
 
-## 🚀 **Quick Start**
+### Technology Stack
+- **Frontend**: React 18, TypeScript, Vite, Material-UI
+- **Mobile**: React Native 0.79.5, Expo 53, TypeScript
+- **Backend**: Fastify, TypeScript, WebSocket, Redis
+- **AI/ML**: Whisper.cpp, Piper TTS, Multiple LLM providers
+- **Testing**: Vitest, Jest, Playwright, React Testing Library
+- **Build Tools**: pnpm, TypeScript, Vite, Metro
+- **Development**: ESLint, Prettier, Husky, lint-staged
 
-### **Prerequisites**
+## 🎤 Voice Assistant Features
+
+### Speech Recognition
+- Real-time speech-to-text conversion
+- Multiple language support
+- Continuous listening mode
+- Error handling and recovery
+- Voice activity detection
+
+### Speech Synthesis
+- Natural text-to-speech output
+- Multiple voice options
+- Configurable speech parameters
+- Real-time synthesis
+
+### AI Integration
+- Multiple LLM provider support
+- Context-aware conversations
+- Memory and conversation history
+- Custom AI training capabilities
+
+### Security & Privacy
+- End-to-end encryption
+- Voice biometrics
+- Secure authentication
+- Data privacy controls
+- SSL/TLS encryption
+
+## 🔧 Development
+
+### Development Commands
 ```bash
-# Node.js 20+ and PNPM 8+
-node --version  # v20+
-pnpm --version  # v8+
-
-# OpenRouter API Key
-export OPENROUTER_API_KEY="your-api-key-here"
-```
-
-### **Installation**
-```bash
-# Clone repository
-git clone <repository-url>
-cd real-time-stt-with-tts
-
 # Install dependencies
 pnpm install
+
+# Start development servers
+pnpm dev
 
 # Build all packages
-pnpm -r build
+pnpm build
+
+# Run tests
+pnpm test
+
+# Run E2E tests
+pnpm test:e2e
+
+# Lint code
+pnpm lint
+
+# Format code
+pnpm format
+
+# Type checking
+pnpm typecheck
 ```
 
-### **Development**
-
-#### **Mobile App**
+### Individual Package Development
 ```bash
+# Web client
+pnpm --filter @voice/client-app dev
+
+# Mobile app
+pnpm --filter @voice/mobile-app start
+
+# Backend server
+pnpm --filter @voice/server dev
+
+# Desktop app
+pnpm --filter voice-assistant-electron dev
+```
+
+### Docker Development
+```bash
+# Start all services with Docker
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+## 🧪 Testing
+
+### Test Coverage
+- **Unit Tests**: Vitest for web, Jest for mobile
+- **Integration Tests**: API and component testing
+- **E2E Tests**: Playwright for full application testing
+- **Security Tests**: Authentication and encryption validation
+- **Performance Tests**: Load testing and optimization
+
+### Running Tests
+```bash
+# All tests
+pnpm test
+
+# Specific package tests
+pnpm --filter @voice/client-app test
+pnpm --filter @voice/mobile-app test
+pnpm --filter @voice/server test
+
+# E2E tests
+pnpm test:e2e
+
+# Test coverage
+pnpm --filter @voice/client-app test:coverage
+```
+
+## 🌐 Browser & Platform Support
+
+### Web Browser Support
+- ✅ Chrome 66+ (Recommended)
+- ✅ Safari 14.1+
+- ✅ Firefox 75+
+- ✅ Edge 79+
+
+### Mobile Platform Support
+- ✅ iOS 13+ (React Native)
+- ✅ Android 8+ (React Native)
+- ✅ PWA support for mobile browsers
+
+### Desktop Platform Support
+- ✅ Windows 10+ (Electron)
+- ✅ macOS 10.14+ (Electron)
+- ✅ Linux (Electron)
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+1. **Build Failures**
+   - Ensure Node.js 18+ and pnpm 8+ are installed
+   - Clear node_modules and reinstall: `pnpm clean && pnpm install`
+   - Check TypeScript errors: `pnpm typecheck`
+
+2. **Mobile App Issues**
+   - Ensure Expo CLI is installed: `npm install -g @expo/cli`
+   - Clear Metro cache: `npx expo start --clear`
+   - Check React Native version compatibility
+
+3. **Voice Recognition Issues**
+   - Use HTTPS or localhost (required for Web Speech API)
+   - Allow microphone permissions in browser
+   - Check browser console for detailed errors
+
+4. **Docker Issues**
+   - Ensure Docker and Docker Compose are installed
+   - Check port conflicts in docker-compose.yml
+   - View logs: `docker-compose logs -f`
+
+### Debug Mode
+```bash
+# Enable debug logging
+DEBUG=* pnpm dev
+
+# View detailed build logs
+pnpm build --verbose
+
+# Check system requirements
+node --version
+pnpm --version
+docker --version
+```
+
+## 📱 Mobile Development
+
+### React Native Setup
+```bash
+# Install Expo CLI
+npm install -g @expo/cli
+
+# Start mobile development
 cd packages/mobile-app
-
-# Install dependencies
-pnpm install
-
-# Start Expo development server
 pnpm start
 
-# Run on device/simulator
-pnpm ios      # iOS
-pnpm android  # Android
-pnpm web      # Web version
+# Run on iOS simulator
+pnpm ios
+
+# Run on Android emulator
+pnpm android
 ```
 
-#### **Web App**
-```bash
-cd packages/client-app
+### Mobile Features
+- Voice recognition with React Native Voice
+- Text-to-speech with react-native-tts
+- Biometric authentication
+- Offline capabilities
+- Push notifications
 
-# Install dependencies
-pnpm install
+## 🔮 Future Enhancements
 
-# Start development server
-pnpm dev
+### Planned Features
+- [ ] **Advanced AI Models**: Custom fine-tuned models
+- [ ] **Multi-language Support**: Internationalization
+- [ ] **Voice Commands**: Custom command system
+- [ ] **Cloud Sync**: Cross-device synchronization
+- [ ] **Analytics**: Usage analytics and insights
+- [ ] **API Documentation**: OpenAPI/Swagger docs
+- [ ] **Plugin System**: Extensible architecture
+- [ ] **Enterprise Features**: SSO, LDAP, advanced security
 
-# Build for production
-pnpm build
-```
+### Technical Improvements
+- [ ] **Performance Optimization**: Bundle size reduction
+- [ ] **Caching Strategy**: Redis and CDN optimization
+- [ ] **Monitoring**: APM and error tracking
+- [ ] **CI/CD**: Automated deployment pipelines
+- [ ] **Security Audit**: Regular security assessments
 
-#### **Desktop App**
-```bash
-cd voice-assistant-electron
+## 📄 License
 
-# Install dependencies
-pnpm install
+This project is part of the Gon Voice Assistant ecosystem.
 
-# Start development
-pnpm dev
+## 🤝 Contributing
 
-# Build for distribution
-pnpm build
-```
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Run the test suite: `pnpm test`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to the branch: `git push origin feature/amazing-feature`
+7. Submit a pull request
 
-## 🔒 **Security Features**
+### Development Guidelines
+- Follow TypeScript best practices
+- Write comprehensive tests
+- Use conventional commits
+- Follow the existing code style
+- Update documentation as needed
 
-### **Mobile Security (2025 Standards)**
-```typescript
-// Biometric Authentication
-const authenticated = await securityService.authenticateWithBiometrics(
-  'Authenticate to access Gon Voice Assistant'
-);
+## 📊 Project Status
 
-// Secure Data Storage
-await securityService.storeSecureData('apiToken', token);
-const token = await securityService.getSecureData('apiToken');
+### Current Status
+- ✅ **Core Architecture**: Complete
+- ✅ **Web Client**: Production ready
+- ✅ **Mobile App**: Beta testing
+- ✅ **Backend Server**: Production ready
+- ✅ **AI Engines**: Integration complete
+- ✅ **Testing Suite**: Comprehensive coverage
+- ✅ **Documentation**: Updated and complete
 
-// Device Security Check
-const securityReport = await securityService.getSecurityReport();
-// Returns: device info, biometrics, security features, recommendations
-```
-
-### **Network Security**
-- **Certificate Pinning**: Prevents MITM attacks
-- **SSL Pinning**: Enhanced network security
-- **Secure Headers**: CSP, HSTS, X-Frame-Options
-- **JWT Authentication**: Secure API access with refresh tokens
-- **Rate Limiting**: Prevents API abuse
-
-### **Data Protection**
-- **AES-256 Encryption**: Data encryption at rest
-- **Secure Keychain**: iOS Keychain and Android Keystore
-- **Input Validation**: Comprehensive input sanitization
-- **Audit Logging**: Complete security audit trail
-
-## 📊 **Testing Strategy**
-
-### **Test Coverage (85%+)**
-```typescript
-// Component Testing
-import { render, fireEvent } from '@testing-library/react-native';
-
-test('should handle voice input correctly', () => {
-  const { getByTestId } = render(<VoiceInput />);
-  const input = getByTestId('voice-input');
-  
-  fireEvent.press(input);
-  expect(mockVoiceService.startListening).toHaveBeenCalled();
-});
-
-// Store Testing
-test('should add conversation to store', () => {
-  const { result } = renderHook(() => useAppStore());
-  
-  act(() => {
-    result.current.addConversation(mockConversation);
-  });
-  
-  expect(result.current.conversations).toHaveLength(1);
-});
-```
-
-### **Testing Types**
-- **Unit Tests**: Component and utility testing
-- **Integration Tests**: API and service testing
-- **E2E Tests**: Complete user journey testing
-- **Security Tests**: Authentication and authorization testing
-- **Performance Tests**: Load and stress testing
-
-## 🎯 **Performance Metrics**
-
-### **Target Performance**
-- **App Launch Time**: < 2 seconds
-- **Voice Recognition**: < 1 second response
-- **AI Response Time**: < 3 seconds
-- **Memory Usage**: < 200MB
-- **Battery Impact**: Minimal background processing
-
-### **Monitoring**
-- **Real-time Metrics**: Performance monitoring dashboard
-- **Error Tracking**: Comprehensive error reporting
-- **User Analytics**: Usage patterns and optimization
-- **Health Checks**: Automated system health monitoring
-
-## 🎭 **Gon Persona**
-
-### **Personality Traits**
-- **Friendly and warm**: Always welcoming and approachable
-- **Enthusiastic about helping**: Loves to assist with any task
-- **Uses Brazilian Portuguese naturally**: Native language fluency
-- **Loves technology and innovation**: Tech-savvy and curious
-- **Patient and understanding**: Never rushes or gets frustrated
-- **Has a sense of humor**: Light-hearted and fun to talk to
-
-### **Language & Voice**
-- **Language**: Brazilian Portuguese (pt-BR)
-- **Voice**: Natural, conversational tone
-- **Style**: Uses Brazilian expressions and slang naturally
-- **Responses**: Optimized for voice interaction (concise, clear)
-
-## 🤝 **Contributing**
-
-### **Development Guidelines**
-- **TypeScript**: Strict mode enabled
-- **ESLint**: Code quality enforcement
-- **Prettier**: Consistent formatting
-- **Tests**: Required for all changes (85%+ coverage)
-- **Documentation**: Update as needed
-- **Security**: Follow security best practices
-- **Accessibility**: Ensure accessibility compliance
-
-### **Mobile App Guidelines**
-- **React Native 0.73+**: Use latest features and APIs
-- **TypeScript**: Strict typing for all components
-- **Testing**: Component, integration, and E2E tests
-- **Security**: Implement security best practices
-- **Performance**: Optimize for speed and battery life
-- **Accessibility**: Support screen readers and assistive technologies
-
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 **Acknowledgments**
-
-- **React Native Team**: Amazing mobile framework
-- **Expo Team**: Cross-platform development tools
-- **OpenRouter**: AI model access
-- **Zustand**: Lightweight state management
-- **React Query**: Server state management
-- **Testing Library**: Modern testing utilities
-
-## 📞 **Support**
-
-- **Documentation**: [docs.gonvoice.com](https://docs.gonvoice.com)
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
-- **Security**: security@gonvoice.com
+### Recent Fixes
+- ✅ Fixed React version compatibility issues
+- ✅ Resolved Jest configuration for React Native
+- ✅ Fixed TypeScript compilation errors
+- ✅ Updated dependency versions
+- ✅ Improved test coverage and reliability
+- ✅ Enhanced build process and error handling
 
 ---
 
-**🎭 Gon Voice Assistant** - Your Personal AI Companion with Enterprise-Grade Security & Modern React Native Architecture
+**🎭 Gon Voice Assistant** - Real-time voice interaction across all platforms! 🚀

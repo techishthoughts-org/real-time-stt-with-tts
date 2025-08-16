@@ -14,7 +14,11 @@ const config = {
     '^@voice/config$': '<rootDir>/../shared/config/src',
     '^@voice/observability$': '<rootDir>/../shared/observability/src',
     '^@voice/schemas$': '<rootDir>/../shared/schemas/src',
+    // Mock React Native modules that cause issues in tests
     '^react-native$': '<rootDir>/src/__mocks__/react-native.js',
+    '^@react-native/js-polyfills$': '<rootDir>/src/__mocks__/react-native-polyfills.js',
+    // Exclude problematic polyfills
+    '^@react-native/js-polyfills/error-guard$': '<rootDir>/src/__mocks__/react-native-polyfills.js',
   },
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.(ts|tsx|js)', '**/*.(test|spec).(ts|tsx|js)'],
@@ -33,6 +37,20 @@ const config = {
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testTimeout: 10000,
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/android/',
+    '/ios/',
+    '/e2e/',
+  ],
+  // Add globals for React Native testing
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        jsx: 'react-jsx',
+      },
+    },
+  },
 };
 
 module.exports = config;

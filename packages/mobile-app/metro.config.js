@@ -1,4 +1,7 @@
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { getDefaultConfig } = require('@react-native/metro-config');
+const path = require('path');
 
 /**
  * Metro configuration
@@ -13,6 +16,25 @@ config.resolver = {
   ...config.resolver,
   resolverMainFields: ['react-native', 'browser', 'main'],
   platforms: ['ios', 'android', 'native', 'web'],
+  alias: {
+    '@': path.resolve(__dirname, './src'),
+  },
+};
+
+// Add watch folders for monorepo
+config.watchFolders = [
+  path.resolve(__dirname, '../shared'),
+];
+
+// Fix transformer for web
+config.transformer = {
+  ...config.transformer,
+  getTransformOptions: async () => ({
+    transform: {
+      experimentalImportSupport: false,
+      inlineRequires: true,
+    },
+  }),
 };
 
 module.exports = config;

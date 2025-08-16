@@ -34,15 +34,15 @@ export const useVoiceAssistant = () => {
       recognitionInstance.interimResults = true;
       recognitionInstance.lang = 'pt-BR';
       
-      recognitionInstance.onstart = () => {
+      (recognitionInstance as any).onstart = () => {
         setState(prev => ({ ...prev, isListening: true, error: null }));
       };
       
-      recognitionInstance.onend = () => {
+      (recognitionInstance as any).onend = () => {
         setState(prev => ({ ...prev, isListening: false }));
       };
       
-      recognitionInstance.onresult = (event) => {
+      (recognitionInstance as any).onresult = (event: any) => {
         let finalTranscript = '';
         let interimTranscript = '';
         
@@ -66,7 +66,7 @@ export const useVoiceAssistant = () => {
         }
       };
       
-      recognitionInstance.onerror = (event) => {
+      (recognitionInstance as any).onerror = (event: any) => {
         setState(prev => ({
           ...prev,
           isListening: false,
@@ -166,15 +166,15 @@ export const useVoiceAssistant = () => {
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       
-      utterance.onstart = () => {
+      (utterance as any).onstart = () => {
         setState(prev => ({ ...prev, isSpeaking: true }));
       };
       
-      utterance.onend = () => {
+      (utterance as any).onend = () => {
         setState(prev => ({ ...prev, isSpeaking: false }));
       };
       
-      utterance.onerror = (event) => {
+      (utterance as any).onerror = (event: any) => {
         setState(prev => ({
           ...prev,
           isSpeaking: false,

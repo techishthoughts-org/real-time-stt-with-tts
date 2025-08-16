@@ -243,7 +243,11 @@ const HealthIndicator: React.FC<{
 };
 
 const App: React.FC = () => {
-  return <AppContent />;
+  return (
+    <div data-testid="app-container">
+      <AppContent />
+    </div>
+  );
 };
 
 export default App;
