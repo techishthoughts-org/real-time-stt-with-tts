@@ -9,6 +9,7 @@ import Fastify from 'fastify';
 import client from 'prom-client';
 import { cacheService } from './cache';
 import { EngineManager } from './engines';
+import { chatRoutes } from './routes/chat';
 import { healthRoutes } from './routes/health';
 // import { authRoutes } from './routes/auth';
 // import cookie from '@fastify/cookie';
@@ -243,6 +244,10 @@ export async function buildApp() {
 
   // Health routes
   await healthRoutes(fastify);
+
+  // Chat routes
+  await chatRoutes(fastify, engineManager);
+
   // TODO: Fix TypeScript issues with auth routes
   // await authRoutes(fastify);
 

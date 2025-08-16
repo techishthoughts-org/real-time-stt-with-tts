@@ -8,7 +8,7 @@ import { Box, Container } from '@mui/material';
 
 // Components
 import Header from '../components/Header';
-import VoiceAssistant from '../components/VoiceAssistant';
+import { VoiceAssistant } from '../components/VoiceAssistant';
 import ConversationHistory from '../components/ConversationHistory';
 import Settings from '../components/Settings';
 import Login from '../components/Login';
@@ -108,7 +108,7 @@ const theme = createTheme({
 const App: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { isListening, isSpeaking, transcription, response } = useVoiceAssistant();
+  // Voice assistant state is now managed within the VoiceAssistant component
   const { showInstallPrompt, showUpdateNotification, installPWA, updatePWA } = usePWA();
 
   useEffect(() => {
@@ -151,14 +151,7 @@ const App: React.FC = () => {
                     <Routes>
                       <Route 
                         path="/" 
-                        element={
-                          <VoiceAssistant 
-                            isListening={isListening}
-                            isSpeaking={isSpeaking}
-                            transcription={transcription}
-                            response={response}
-                          />
-                        } 
+                        element={<VoiceAssistant />} 
                       />
                       <Route path="/conversations" element={<ConversationHistory />} />
                       <Route path="/settings" element={<Settings />} />

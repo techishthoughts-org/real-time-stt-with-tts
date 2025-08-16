@@ -1,248 +1,481 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Typography,
-  Button,
   IconButton,
   Chip,
   LinearProgress,
-  Paper,
-  Grid,
-  Avatar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
   Divider,
+  Switch,
+  FormControlLabel,
+  Slider,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import {
   Mic,
   MicOff,
   VolumeUp,
   VolumeOff,
-  PlayArrow,
-  Stop,
   Settings,
   History,
+  Clear,
+  PlayArrow,
+  Stop,
+  Refresh,
+  Speed,
+  Language,
+  Person,
 } from '@mui/icons-material';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
 import { useAuth } from '../hooks/useAuth';
 
 interface VoiceAssistantProps {
-  isListening: boolean;
-  isSpeaking: boolean;
-  transcription: string;
-  response: string;
+  userId?: string;
+  onSettingsChange?: (settings: any) => void;
 }
 
-const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
-  isListening,
-  isSpeaking,
-  transcription,
-  response,
+export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({
+  userId = 'anonymous',
+  onSettingsChange,
 }) => {
-  const { startListening, stopListening, speak, stopSpeaking } = useVoiceAssistant();
   const { user } = useAuth();
-  const [audioLevel, setAudioLevel] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [useStreaming, setUseStreaming] = useState(true);
+  const [voiceSettings, setVoiceSettings] = useState({
+    rate: 0.9,
+    pitch: 1.0,
+    volume: 1.0,
+    language: 'pt-BR',
+  });
+  const [aiSettings, setAiSettings] = useState({
+    model: 'gpt-3.5-turbo',
+    temperature: 0.7,
+    maxTokens: 150,
+    persona: 'Gon',
+  });
 
-  // Simulate audio level for visual feedback
-  useEffect(() => {
-    if (isListening) {
-      const interval = setInterval(() => {
-        setAudioLevel(Math.random() * 100);
-      }, 100);
-      return () => clearInterval(interval);
-    } else {
-      setAudioLevel(0);
-    }
-  }, [isListening]);
+  const {
+    isListening,
+    isSpeaking,
+    isStreaming,
+    transcription,
+    response,
+    partialResponse,
+    error,
+    conversationId,
+    conversations,
+    stats,
+    startListening,
+    stopListening,
+    speak,
+    stopSpeaking,
+    sendMessage,
+    clearError,
+    clearConversation,
+    isLoading,
+    conversationsLoading,
+  } = useVoiceAssistant(user?.id || userId, voiceSettings, aiSettings);
 
-  const handleVoiceButtonClick = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
+  const handleStartListening = useCallback(() => {
+    clearError();
+    startListening();
+  }, [startListening, clearError]);
 
-  const handleSpeakClick = () => {
-    if (isSpeaking) {
-      stopSpeaking();
-    } else if (response) {
-      speak(response);
-    }
-  };
+  const handleStopListening = useCallback(() => {
+    stopListening();
+  }, [stopListening]);
+
+  const handleSendMessage = useCallback((message: string) => {
+    sendMessage(message, useStreaming);
+  }, [sendMessage, useStreaming]);
+
+  const handleSpeak = useCallback((text: string) => {
+    speak(text);
+  }, [speak]);
+
+  const handleStopSpeaking = useCallback(() => {
+    stopSpeaking();
+  }, [stopSpeaking]);
+
+  const handleClearConversation = useCallback(() => {
+    clearConversation();
+  }, [clearConversation]);
+
+  const handleVoiceSettingsChange = useCallback((newSettings: typeof voiceSettings) => {
+    setVoiceSettings(newSettings);
+    onSettingsChange?.({ voice: newSettings, ai: aiSettings });
+  }, [onSettingsChange, aiSettings]);
+
+  const handleAISettingsChange = useCallback((newSettings: typeof aiSettings) => {
+    setAiSettings(newSettings);
+    onSettingsChange?.({ voice: voiceSettings, ai: newSettings });
+  }, [onSettingsChange, voiceSettings]);
+
+  const displayText = isStreaming ? partialResponse : response;
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-      {/* Header */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          🎭 Gon Voice Assistant
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Your personal AI companion with Brazilian Portuguese personality
-        </Typography>
-      </Box>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
+      {/* Error Display */}
+      {error && (
+        <Alert severity="error" onClose={clearError} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-      {/* Main Voice Interface */}
-      <Card sx={{ mb: 3, position: 'relative', overflow: 'visible' }}>
-        <CardContent sx={{ p: 4, textAlign: 'center' }}>
-          {/* Status Indicator */}
-          <Box sx={{ mb: 3 }}>
-            <Chip
-              label={isListening ? 'Listening...' : isSpeaking ? 'Speaking...' : 'Ready'}
-              color={isListening ? 'error' : isSpeaking ? 'success' : 'default'}
-              icon={isListening ? <Mic /> : isSpeaking ? <VolumeUp /> : <Mic />}
-              sx={{ fontSize: '1.1rem', py: 1 }}
-            />
+      {/* Main Voice Assistant Card */}
+      <Card sx={{ mb: 2 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h5" component="h2" sx={{ flexGrow: 1 }}>
+              Gon Voice Assistant
+            </Typography>
+            <IconButton onClick={() => setShowHistory(true)} disabled={conversationsLoading}>
+              <History />
+            </IconButton>
+            <IconButton onClick={() => setShowSettings(true)}>
+              <Settings />
+            </IconButton>
           </Box>
 
-          {/* Voice Button */}
-          <Box sx={{ position: 'relative', display: 'inline-block', mb: 3 }}>
-            <IconButton
-              onClick={handleVoiceButtonClick}
-              disabled={isSpeaking}
-              sx={{
-                width: 120,
-                height: 120,
-                backgroundColor: isListening ? 'error.main' : 'primary.main',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: isListening ? 'error.dark' : 'primary.dark',
-                  transform: 'scale(1.05)',
-                },
-                transition: 'all 0.3s ease',
-                boxShadow: isListening ? '0 0 20px rgba(244, 67, 54, 0.4)' : '0 4px 12px rgba(102, 126, 234, 0.3)',
-              }}
-            >
-              {isListening ? <MicOff sx={{ fontSize: 48 }} /> : <Mic sx={{ fontSize: 48 }} />}
-            </IconButton>
-
-            {/* Audio Level Visualization */}
+          {/* Status Indicators */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
             {isListening && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: -10,
-                  left: -10,
-                  right: -10,
-                  bottom: -10,
-                  borderRadius: '50%',
-                  border: '2px solid',
-                  borderColor: 'error.main',
-                  opacity: 0.3,
-                  animation: 'pulse 1.5s infinite',
-                  '@keyframes pulse': {
-                    '0%': { transform: 'scale(1)', opacity: 0.3 },
-                    '50%': { transform: 'scale(1.1)', opacity: 0.1 },
-                    '100%': { transform: 'scale(1)', opacity: 0.3 },
-                  },
-                }}
+              <Chip
+                icon={<Mic />}
+                label="Listening"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            {isSpeaking && (
+              <Chip
+                icon={<VolumeUp />}
+                label="Speaking"
+                color="secondary"
+                variant="outlined"
+              />
+            )}
+            {isStreaming && (
+              <Chip
+                icon={<Speed />}
+                label="Streaming"
+                color="info"
+                variant="outlined"
+              />
+            )}
+            {conversationId && (
+              <Chip
+                label={`Conversation: ${conversationId.slice(-8)}`}
+                variant="outlined"
+                size="small"
               />
             )}
           </Box>
 
-          {/* Audio Level Bar */}
-          {isListening && (
-            <Box sx={{ width: '100%', mb: 3 }}>
-              <LinearProgress
-                variant="determinate"
-                value={audioLevel}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: 'grey.200',
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: 'error.main',
-                    borderRadius: 4,
-                  },
-                }}
-              />
-            </Box>
+          {/* Loading Progress */}
+          {(isLoading || isStreaming) && (
+            <LinearProgress sx={{ mb: 2 }} />
           )}
 
-          {/* Instructions */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {isListening
-              ? 'Speak now... I\'m listening to you!'
-              : isSpeaking
-              ? 'Speaking response...'
-              : 'Tap the microphone to start talking with Gon'}
-          </Typography>
+          {/* Transcription Display */}
+          {transcription && (
+            <Card variant="outlined" sx={{ mb: 2, bgcolor: 'grey.50' }}>
+              <CardContent>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  You said:
+                </Typography>
+                <Typography variant="body1">{transcription}</Typography>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* AI Response Display */}
+          {displayText && (
+            <Card variant="outlined" sx={{ mb: 2, bgcolor: 'primary.50' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ flexGrow: 1 }}>
+                    Gon's Response:
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleSpeak(displayText)}
+                    disabled={isSpeaking}
+                  >
+                    <PlayArrow />
+                  </IconButton>
+                  {isSpeaking && (
+                    <IconButton size="small" onClick={handleStopSpeaking}>
+                      <Stop />
+                    </IconButton>
+                  )}
+                </Box>
+                <Typography variant="body1">{displayText}</Typography>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Control Buttons */}
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={isListening ? <MicOff /> : <Mic />}
+              onClick={isListening ? handleStopListening : handleStartListening}
+              disabled={isLoading || isStreaming}
+              sx={{ minWidth: 120 }}
+            >
+              {isListening ? 'Stop' : 'Listen'}
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<Clear />}
+              onClick={handleClearConversation}
+              disabled={!conversationId && !transcription && !response}
+            >
+              Clear
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<Refresh />}
+              onClick={() => window.location.reload()}
+            >
+              Reset
+            </Button>
+          </Box>
         </CardContent>
       </Card>
 
-      {/* Conversation Display */}
-      <Grid container spacing={3}>
-        {/* User Input */}
-        {transcription && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3, backgroundColor: 'primary.light', color: 'white' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Avatar sx={{ mr: 2, bgcolor: 'white', color: 'primary.main' }}>
-                  {user?.name?.[0] || 'U'}
-                </Avatar>
-                <Typography variant="h6">You said:</Typography>
-              </Box>
-              <Typography variant="body1">{transcription}</Typography>
-            </Paper>
-          </Grid>
-        )}
+      {/* Statistics Card */}
+      {stats && (
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Chat Statistics
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Chip label={`${stats.totalConversations} Conversations`} />
+              <Chip label={`${stats.totalMessages} Messages`} />
+              <Chip label={`${stats.totalTokens} Tokens`} />
+              <Chip label={`${stats.avgMessagesPerConversation} Avg/Conv`} />
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Assistant Response */}
-        {response && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3, backgroundColor: 'grey.50' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Avatar sx={{ mr: 2, bgcolor: 'secondary.main' }}>🎭</Avatar>
-                  <Typography variant="h6">Gon says:</Typography>
-                </Box>
-                <IconButton
-                  onClick={handleSpeakClick}
-                  color={isSpeaking ? 'error' : 'primary'}
-                  disabled={!response}
+      {/* Settings Dialog */}
+      <Dialog open={showSettings} onClose={() => setShowSettings(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Voice Assistant Settings</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mt: 1 }}>
+            {/* Voice Settings */}
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Voice Settings
+              </Typography>
+              
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Language</InputLabel>
+                <Select
+                  value={voiceSettings.language}
+                  onChange={(e) => handleVoiceSettingsChange({
+                    ...voiceSettings,
+                    language: e.target.value
+                  })}
                 >
-                  {isSpeaking ? <Stop /> : <PlayArrow />}
-                </IconButton>
-              </Box>
-              <Typography variant="body1">{response}</Typography>
-            </Paper>
-          </Grid>
-        )}
-      </Grid>
+                  <MenuItem value="pt-BR">Portuguese (Brazil)</MenuItem>
+                  <MenuItem value="en-US">English (US)</MenuItem>
+                  <MenuItem value="es-ES">Spanish (Spain)</MenuItem>
+                  <MenuItem value="fr-FR">French (France)</MenuItem>
+                  <MenuItem value="de-DE">German (Germany)</MenuItem>
+                </Select>
+              </FormControl>
 
-      {/* Quick Actions */}
-      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<History />}
-          onClick={() => window.location.href = '/conversations'}
-        >
-          Conversation History
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<Settings />}
-          onClick={() => window.location.href = '/settings'}
-        >
-          Settings
-        </Button>
-      </Box>
+              <Typography gutterBottom>Speech Rate</Typography>
+              <Slider
+                value={voiceSettings.rate}
+                onChange={(_, value) => handleVoiceSettingsChange({
+                  ...voiceSettings,
+                  rate: value as number
+                })}
+                min={0.5}
+                max={2.0}
+                step={0.1}
+                marks
+                valueLabelDisplay="auto"
+                sx={{ mb: 2 }}
+              />
 
-      {/* Connection Status */}
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Chip
-          label="Connected to Gon AI"
-          color="success"
-          size="small"
-          sx={{ mr: 1 }}
-        />
-        <Typography variant="caption" color="text.secondary">
-          Real-time voice processing with AI-powered responses
-        </Typography>
-      </Box>
+              <Typography gutterBottom>Pitch</Typography>
+              <Slider
+                value={voiceSettings.pitch}
+                onChange={(_, value) => handleVoiceSettingsChange({
+                  ...voiceSettings,
+                  pitch: value as number
+                })}
+                min={0.5}
+                max={2.0}
+                step={0.1}
+                marks
+                valueLabelDisplay="auto"
+                sx={{ mb: 2 }}
+              />
+
+              <Typography gutterBottom>Volume</Typography>
+              <Slider
+                value={voiceSettings.volume}
+                onChange={(_, value) => handleVoiceSettingsChange({
+                  ...voiceSettings,
+                  volume: value as number
+                })}
+                min={0.0}
+                max={1.0}
+                step={0.1}
+                marks
+                valueLabelDisplay="auto"
+              />
+            </Box>
+
+            {/* AI Settings */}
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                AI Settings
+              </Typography>
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Model</InputLabel>
+                <Select
+                  value={aiSettings.model}
+                  onChange={(e) => handleAISettingsChange({
+                    ...aiSettings,
+                    model: e.target.value
+                  })}
+                >
+                  <MenuItem value="gpt-3.5-turbo">GPT-3.5 Turbo</MenuItem>
+                  <MenuItem value="gpt-4">GPT-4</MenuItem>
+                  <MenuItem value="claude-3-sonnet">Claude 3 Sonnet</MenuItem>
+                  <MenuItem value="llama-2-70b">Llama 2 70B</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Persona</InputLabel>
+                <Select
+                  value={aiSettings.persona}
+                  onChange={(e) => handleAISettingsChange({
+                    ...aiSettings,
+                    persona: e.target.value
+                  })}
+                >
+                  <MenuItem value="Gon">Gon (Friendly Assistant)</MenuItem>
+                  <MenuItem value="Professional">Professional</MenuItem>
+                  <MenuItem value="Casual">Casual</MenuItem>
+                  <MenuItem value="Creative">Creative</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Typography gutterBottom>Temperature (Creativity)</Typography>
+              <Slider
+                value={aiSettings.temperature}
+                onChange={(_, value) => handleAISettingsChange({
+                  ...aiSettings,
+                  temperature: value as number
+                })}
+                min={0.0}
+                max={2.0}
+                step={0.1}
+                marks
+                valueLabelDisplay="auto"
+                sx={{ mb: 2 }}
+              />
+
+              <Typography gutterBottom>Max Tokens</Typography>
+              <Slider
+                value={aiSettings.maxTokens}
+                onChange={(_, value) => handleAISettingsChange({
+                  ...aiSettings,
+                  maxTokens: value as number
+                })}
+                min={50}
+                max={500}
+                step={10}
+                marks
+                valueLabelDisplay="auto"
+                sx={{ mb: 2 }}
+              />
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={useStreaming}
+                    onChange={(e) => setUseStreaming(e.target.checked)}
+                  />
+                }
+                label="Use Streaming Responses"
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSettings(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Conversation History Dialog */}
+      <Dialog open={showHistory} onClose={() => setShowHistory(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Conversation History</DialogTitle>
+        <DialogContent>
+          {conversationsLoading ? (
+            <LinearProgress />
+          ) : conversations.length > 0 ? (
+            <List>
+              {conversations.map((conversation: any, index: number) => (
+                <React.Fragment key={conversation.id}>
+                  <ListItem>
+                    <ListItemText
+                      primary={`Conversation ${conversation.id.slice(-8)}`}
+                      secondary={`${conversation.messages.length} messages • ${new Date(conversation.updatedAt).toLocaleDateString()}`}
+                    />
+                    <Chip
+                      label={conversation.metadata?.language || 'Unknown'}
+                      size="small"
+                      variant="outlined"
+                    />
+                  </ListItem>
+                  {index < conversations.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </List>
+          ) : (
+            <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
+              No conversations yet. Start talking to Gon!
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowHistory(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
-
-export default VoiceAssistant;

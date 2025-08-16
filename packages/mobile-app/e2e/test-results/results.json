@@ -168,19 +168,19 @@
   "suites": [],
   "errors": [
     {
-      "message": "TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"app-container\"]') to be visible\u001b[22m\n",
-      "stack": "TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"app-container\"]') to be visible\u001b[22m\n\n    at globalSetup (/Users/arthurcosta/dev/personal/real-time-stt-with-tts/packages/mobile-app/e2e/global-setup.ts:19:16)",
+      "message": "TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[testID=\"app-container\"]') to be visible\u001b[22m\n",
+      "stack": "TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[testID=\"app-container\"]') to be visible\u001b[22m\n\n    at globalSetup (/Users/arthurcosta/dev/personal/real-time-stt-with-tts/packages/mobile-app/e2e/global-setup.ts:19:16)",
       "location": {
         "file": "/Users/arthurcosta/dev/personal/real-time-stt-with-tts/packages/mobile-app/e2e/global-setup.ts",
         "column": 16,
         "line": 19
       },
-      "snippet": "\u001b[90m   at \u001b[39m../global-setup.ts:19\n\n  17 |     \n  18 |     // Wait for app to initialize\n> 19 |     await page.waitForSelector('[data-testid=\"app-container\"]', { timeout: 30000 });\n     |                ^\n  20 |     console.log('✅ App initialized');\n  21 |     \n  22 |     // Check if we need to authenticate"
+      "snippet": "\u001b[90m   at \u001b[39m../global-setup.ts:19\n\n  17 |     \n  18 |     // Wait for app to initialize\n> 19 |     await page.waitForSelector('[testID=\"app-container\"]', { timeout: 30000 });\n     |                ^\n  20 |     console.log('✅ App initialized');\n  21 |     \n  22 |     // Check if we need to authenticate"
     }
   ],
   "stats": {
-    "startTime": "2025-08-16T00:39:44.092Z",
-    "duration": 33868.222,
+    "startTime": "2025-08-16T00:48:39.451Z",
+    "duration": 975149.735,
     "expected": 0,
     "skipped": 0,
     "unexpected": 0,

@@ -8,7 +8,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Box, Container } from '@mui/material';
 // Components
 import Header from '../components/Header';
-import VoiceAssistant from '../components/VoiceAssistant';
+import { VoiceAssistant } from '../components/VoiceAssistant';
 import ConversationHistory from '../components/ConversationHistory';
 import Settings from '../components/Settings';
 import Login from '../components/Login';
@@ -18,7 +18,6 @@ import PWAInstallPrompt from '../components/PWAInstallPrompt';
 import PWAUpdateNotification from '../components/PWAUpdateNotification';
 // Hooks
 import { useAuth } from '../hooks/useAuth';
-import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
 import { usePWA } from '../hooks/usePWA';
 // Styles
 import './App.css';
@@ -103,7 +102,7 @@ const theme = createTheme({
 const App = () => {
     const [isInitialized, setIsInitialized] = useState(false);
     const { isAuthenticated, isLoading: authLoading } = useAuth();
-    const { isListening, isSpeaking, transcription, response } = useVoiceAssistant();
+    // Voice assistant state is now managed within the VoiceAssistant component
     const { showInstallPrompt, showUpdateNotification, installPWA, updatePWA } = usePWA();
     useEffect(() => {
         // Initialize app
@@ -128,6 +127,6 @@ const App = () => {
     if (!isInitialized || authLoading) {
         return _jsx(LoadingScreen, {});
     }
-    return (_jsx(ErrorBoundary, { children: _jsxs(QueryClientProvider, { client: queryClient, children: [_jsxs(ThemeProvider, { theme: theme, children: [_jsx(CssBaseline, {}), _jsx(Router, { children: _jsxs(Box, { sx: { minHeight: '100vh', backgroundColor: 'background.default' }, children: [isAuthenticated ? (_jsxs(_Fragment, { children: [_jsx(Header, {}), _jsx(Container, { maxWidth: "lg", sx: { py: 3 }, children: _jsxs(Routes, { children: [_jsx(Route, { path: "/", element: _jsx(VoiceAssistant, { isListening: isListening, isSpeaking: isSpeaking, transcription: transcription, response: response }) }), _jsx(Route, { path: "/conversations", element: _jsx(ConversationHistory, {}) }), _jsx(Route, { path: "/settings", element: _jsx(Settings, {}) }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] }) })] })) : (_jsx(Login, {})), showInstallPrompt && (_jsx(PWAInstallPrompt, { onInstall: installPWA })), showUpdateNotification && (_jsx(PWAUpdateNotification, { onUpdate: updatePWA }))] }) })] }), process.env.NODE_ENV === 'development' && _jsx(ReactQueryDevtools, { initialIsOpen: false })] }) }));
+    return (_jsx(ErrorBoundary, { children: _jsxs(QueryClientProvider, { client: queryClient, children: [_jsxs(ThemeProvider, { theme: theme, children: [_jsx(CssBaseline, {}), _jsx(Router, { children: _jsxs(Box, { sx: { minHeight: '100vh', backgroundColor: 'background.default' }, children: [isAuthenticated ? (_jsxs(_Fragment, { children: [_jsx(Header, {}), _jsx(Container, { maxWidth: "lg", sx: { py: 3 }, children: _jsxs(Routes, { children: [_jsx(Route, { path: "/", element: _jsx(VoiceAssistant, {}) }), _jsx(Route, { path: "/conversations", element: _jsx(ConversationHistory, {}) }), _jsx(Route, { path: "/settings", element: _jsx(Settings, {}) }), _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })] }) })] })) : (_jsx(Login, {})), showInstallPrompt && (_jsx(PWAInstallPrompt, { onInstall: installPWA })), showUpdateNotification && (_jsx(PWAUpdateNotification, { onUpdate: updatePWA }))] }) })] }), process.env.NODE_ENV === 'development' && _jsx(ReactQueryDevtools, { initialIsOpen: false })] }) }));
 };
 export default App;

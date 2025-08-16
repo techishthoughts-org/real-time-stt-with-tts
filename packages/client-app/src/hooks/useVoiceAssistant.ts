@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useMutation, useQueryClient } from 'react-query';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMutation, useQueryClient, useQuery } from 'react-query';
 
 interface VoiceAssistantState {
   isListening: boolean;
@@ -7,32 +7,99 @@ interface VoiceAssistantState {
   transcription: string;
   response: string;
   error: string | null;
+  conversationId: string | null;
+  isStreaming: boolean;
+  partialResponse: string;
 }
 
-export const useVoiceAssistant = () => {
+interface VoiceSettings {
+  rate: number;
+  pitch: number;
+  volume: number;
+  voice: string;
+  language: string;
+}
+
+interface AISettings {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  persona: string;
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  metadata?: {
+    model?: string;
+    persona?: string;
+    latency?: number;
+  };
+}
+
+interface Conversation {
+  id: string;
+  userId: string;
+  messages: ChatMessage[];
+  createdAt: string;
+  updatedAt: string;
+  metadata?: {
+    language?: string;
+    totalTokens?: number;
+    duration?: number;
+  };
+}
+
+export const useVoiceAssistant = (
+  userId: string = 'anonymous',
+  voiceSettings?: Partial<VoiceSettings>,
+  aiSettings?: Partial<AISettings>
+) => {
   const [state, setState] = useState<VoiceAssistantState>({
     isListening: false,
     isSpeaking: false,
     transcription: '',
     response: '',
     error: null,
+    conversationId: null,
+    isStreaming: false,
+    partialResponse: '',
   });
 
   const queryClient = useQueryClient();
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  // Web Speech API setup
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [speechSynthesis, setSpeechSynthesis] = useState<SpeechSynthesis | null>(null);
+  // Default settings
+  const defaultVoiceSettings: VoiceSettings = {
+    rate: 0.9,
+    pitch: 1.0,
+    volume: 1.0,
+    voice: 'default',
+    language: 'pt-BR',
+    ...voiceSettings,
+  };
 
+  const defaultAISettings: AISettings = {
+    model: 'gpt-3.5-turbo',
+    temperature: 0.7,
+    maxTokens: 150,
+    persona: 'Gon',
+    ...aiSettings,
+  };
+
+  // Initialize Web Speech API
   useEffect(() => {
-    // Initialize Web Speech API
+    // Initialize Speech Recognition
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
-      recognitionInstance.lang = 'pt-BR';
+      recognitionInstance.lang = defaultVoiceSettings.language;
       
       (recognitionInstance as any).onstart = () => {
         setState(prev => ({ ...prev, isListening: true, error: null }));
@@ -74,28 +141,45 @@ export const useVoiceAssistant = () => {
         }));
       };
       
-      setRecognition(recognitionInstance);
+      recognitionRef.current = recognitionInstance;
     }
     
     // Initialize Speech Synthesis
     if ('speechSynthesis' in window) {
-      setSpeechSynthesis(window.speechSynthesis);
+      speechSynthesisRef.current = window.speechSynthesis;
     }
-  }, []);
 
-  // Send message to AI
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [defaultVoiceSettings.language]);
+
+  // Send message to AI with conversation management
   const sendMessageMutation = useMutation(
     async (message: string) => {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({
+          message,
+          conversationId: state.conversationId,
+          userId,
+          language: defaultVoiceSettings.language,
+          voiceSettings: defaultVoiceSettings,
+          aiSettings: defaultAISettings,
+        }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message');
       }
       
       return response.json();
@@ -105,13 +189,15 @@ export const useVoiceAssistant = () => {
         setState(prev => ({
           ...prev,
           response: data.response,
+          conversationId: data.conversationId,
+          partialResponse: '',
         }));
         
         // Auto-speak the response
         speak(data.response);
         
         // Invalidate conversations query
-        queryClient.invalidateQueries(['conversations']);
+        queryClient.invalidateQueries(['conversations', userId]);
       },
       onError: (error) => {
         setState(prev => ({
@@ -122,15 +208,92 @@ export const useVoiceAssistant = () => {
     }
   );
 
-  const sendMessage = useCallback((message: string) => {
-    sendMessageMutation.mutate(message);
-  }, [sendMessageMutation]);
+  // Stream message to AI
+  const streamMessageMutation = useMutation(
+    async (message: string) => {
+      return new Promise<void>((resolve, reject) => {
+        const eventSource = new EventSource(`/api/chat/stream?message=${encodeURIComponent(message)}&userId=${userId}&conversationId=${state.conversationId || ''}`);
+        
+        eventSourceRef.current = eventSource;
+        setState(prev => ({ ...prev, isStreaming: true, partialResponse: '' }));
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            switch (data.type) {
+              case 'stream_start':
+                console.log('Stream started:', data.streamId);
+                break;
+                
+              case 'chunk':
+                setState(prev => ({
+                  ...prev,
+                  partialResponse: data.partial,
+                  response: data.partial,
+                }));
+                break;
+                
+              case 'stream_end':
+                setState(prev => ({
+                  ...prev,
+                  isStreaming: false,
+                  conversationId: data.conversationId,
+                }));
+                eventSource.close();
+                resolve();
+                break;
+                
+              case 'error':
+                setState(prev => ({
+                  ...prev,
+                  isStreaming: false,
+                  error: data.error,
+                }));
+                eventSource.close();
+                reject(new Error(data.error));
+                break;
+            }
+          } catch (error) {
+            eventSource.close();
+            reject(error);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          setState(prev => ({ ...prev, isStreaming: false }));
+          eventSource.close();
+          reject(error);
+        };
+      });
+    },
+    {
+      onSuccess: () => {
+        // Invalidate conversations query
+        queryClient.invalidateQueries(['conversations', userId]);
+      },
+      onError: (error) => {
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error.message : 'Failed to stream message',
+        }));
+      },
+    }
+  );
+
+  const sendMessage = useCallback((message: string, useStreaming: boolean = false) => {
+    if (useStreaming) {
+      streamMessageMutation.mutate(message);
+    } else {
+      sendMessageMutation.mutate(message);
+    }
+  }, [sendMessageMutation, streamMessageMutation]);
 
   // Start listening
   const startListening = useCallback(() => {
-    if (recognition && !state.isListening) {
+    if (recognitionRef.current && !state.isListening) {
       try {
-        recognition.start();
+        recognitionRef.current.start();
       } catch (error) {
         setState(prev => ({
           ...prev,
@@ -138,13 +301,13 @@ export const useVoiceAssistant = () => {
         }));
       }
     }
-  }, [recognition, state.isListening]);
+  }, [state.isListening]);
 
   // Stop listening
   const stopListening = useCallback(() => {
-    if (recognition && state.isListening) {
+    if (recognitionRef.current && state.isListening) {
       try {
-        recognition.stop();
+        recognitionRef.current.stop();
       } catch (error) {
         setState(prev => ({
           ...prev,
@@ -152,19 +315,28 @@ export const useVoiceAssistant = () => {
         }));
       }
     }
-  }, [recognition, state.isListening]);
+  }, [state.isListening]);
 
-  // Speak text
+  // Speak text with enhanced settings
   const speak = useCallback((text: string) => {
-    if (speechSynthesis && text) {
+    if (speechSynthesisRef.current && text) {
       // Stop any current speech
-      speechSynthesis.cancel();
+      speechSynthesisRef.current.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'pt-BR';
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
+      utterance.lang = defaultVoiceSettings.language;
+      utterance.rate = defaultVoiceSettings.rate;
+      utterance.pitch = defaultVoiceSettings.pitch;
+      utterance.volume = defaultVoiceSettings.volume;
+      
+      // Try to set voice if available
+      const voices = speechSynthesisRef.current.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.lang.includes(defaultVoiceSettings.language.split('-')[0])
+      );
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
       
       (utterance as any).onstart = () => {
         setState(prev => ({ ...prev, isSpeaking: true }));
@@ -182,30 +354,76 @@ export const useVoiceAssistant = () => {
         }));
       };
       
-      speechSynthesis.speak(utterance);
+      speechSynthesisRef.current.speak(utterance);
     }
-  }, [speechSynthesis]);
+  }, [defaultVoiceSettings]);
 
   // Stop speaking
   const stopSpeaking = useCallback(() => {
-    if (speechSynthesis) {
-      speechSynthesis.cancel();
+    if (speechSynthesisRef.current) {
+      speechSynthesisRef.current.cancel();
       setState(prev => ({ ...prev, isSpeaking: false }));
     }
-  }, [speechSynthesis]);
+  }, []);
 
   // Clear error
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
+  // Clear conversation
+  const clearConversation = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      conversationId: null,
+      transcription: '',
+      response: '',
+      partialResponse: '',
+    }));
+  }, []);
+
+  // Get conversation history
+  const { data: conversations, isLoading: conversationsLoading } = useQuery(
+    ['conversations', userId],
+    async () => {
+      const response = await fetch(`/api/chat/conversations/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch conversations');
+      }
+      return response.json();
+    },
+    {
+      enabled: !!userId && userId !== 'anonymous',
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    }
+  );
+
+  // Get chat statistics
+  const { data: stats } = useQuery(
+    ['chat-stats', userId],
+    async () => {
+      const response = await fetch(`/api/chat/stats/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch chat stats');
+      }
+      return response.json();
+    },
+    {
+      enabled: !!userId && userId !== 'anonymous',
+      staleTime: 10 * 60 * 1000, // 10 minutes
+    }
+  );
+
   return {
     // State
     isListening: state.isListening,
     isSpeaking: state.isSpeaking,
+    isStreaming: state.isStreaming,
     transcription: state.transcription,
     response: state.response,
+    partialResponse: state.partialResponse,
     error: state.error,
+    conversationId: state.conversationId,
     
     // Actions
     startListening,
@@ -214,8 +432,18 @@ export const useVoiceAssistant = () => {
     stopSpeaking,
     sendMessage,
     clearError,
+    clearConversation,
     
-    // Loading state
+    // Data
+    conversations: conversations?.conversations || [],
+    stats,
+    
+    // Loading states
     isLoading: sendMessageMutation.isLoading,
+    conversationsLoading,
+    
+    // Settings
+    voiceSettings: defaultVoiceSettings,
+    aiSettings: defaultAISettings,
   };
 };
