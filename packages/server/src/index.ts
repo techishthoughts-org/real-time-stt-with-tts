@@ -11,6 +11,8 @@ import { cacheService } from './cache';
 import { EngineManager } from './engines';
 import { chatRoutes } from './routes/chat';
 import { healthRoutes } from './routes/health';
+import { setupWebSocketChat } from './websocket-chat';
+import websocket from '@fastify/websocket';
 // import { authRoutes } from './routes/auth';
 // import cookie from '@fastify/cookie';
 import { WebRTCManager } from './webrtc';
@@ -145,6 +147,9 @@ export async function buildApp() {
     maxAge: 86400 // 24 hours
   })
 
+  // Register WebSocket plugin
+  await fastify.register(websocket);
+
   // Register rate limiting
   await fastify.register(rateLimit, {
     max: config.security.rateLimit.max,
@@ -247,6 +252,9 @@ export async function buildApp() {
 
   // Chat routes
   await chatRoutes(fastify, engineManager);
+  
+  // WebSocket chat
+  setupWebSocketChat(fastify, engineManager);
 
   // TODO: Fix TypeScript issues with auth routes
   // await authRoutes(fastify);
